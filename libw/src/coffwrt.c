@@ -330,8 +330,13 @@ void CoffWriteImport( libfile io, sym_file *sfile )
         assert( mod_name_len != 0 );
         if( mod_name_len == 0 )
             FatalError( ERR_CANT_DO_IMPORT, "AR", "NO DLL NAME" );
-        AddCoffSection( &c_file, ".idata$6", ( dll_name_len | 1 ) + 1, 0, IMAGE_SCN_ALIGN_2BYTES
-            | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        /* linkw: alignment for .idata$6 set to 8 bytes */
+        if ( type == IMAGE_REL_AMD64_ADDR32NB )
+            AddCoffSection( &c_file, ".idata$6", ( dll_name_len | 1 ) + 1, 0, IMAGE_SCN_ALIGN_8BYTES
+                | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        else
+            AddCoffSection( &c_file, ".idata$6", ( dll_name_len | 1 ) + 1, 0, IMAGE_SCN_ALIGN_2BYTES
+                | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
         memcpy( buffer, "__IMPORT_DESCRIPTOR_", 20 );
         memcpy( buffer + 20, modName, mod_name_len + 1 );
         AddCoffSymbol( &c_file, buffer, 0x0, 1, IMAGE_SYM_TYPE_NULL,
@@ -389,7 +394,7 @@ void CoffWriteImport( libfile io, sym_file *sfile )
         SetCoffFile( &c_file, sfile->import->processor, sfile->arch.date, 0 );
         AddCoffSection( &c_file, ".idata$5", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES
             | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
-        AddCoffSection( &c_file, ".idata$4", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES
+        AddCoffSection( &c_file, ".idata$4", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES // 0xC0600040 );//
             | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
         assert( mod_name_len != 0 );
         if( mod_name_len == 0 )

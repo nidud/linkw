@@ -75,7 +75,7 @@
 #define _RC_DELIM_LEFT_		[
 #define _RC_DELIM_RIGHT_	]
 
-#define BAN_VER_STR "2.0" //" (JWlib 1.9beta 8)"
+#define BAN_VER_STR "2.1" //" (JWlib 1.9beta 8)"
 
 /* these should all be _BANVER/100.0 */
 #define _I86WCGL_VERSION_	BAN_VER_STR
