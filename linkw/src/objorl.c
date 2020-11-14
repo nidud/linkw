@@ -1,6 +1,6 @@
 /****************************************************************************
 *
-*                            Open Watcom Project
+*			     Open Watcom Project
 *
 *    Portions Copyright (c) 1983-2002 Sybase, Inc. All Rights Reserved.
 *
@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  Object file processing routines specific to ORL.
+* Description:	Object file processing routines specific to ORL.
 *
 ****************************************************************************/
 
@@ -53,7 +53,7 @@
 #include "carve.h"
 #include "wcomdef.h"
 #include "permdata.h"
-#include "command.h"    // NYI: don't want to include this!
+#include "command.h"	// NYI: don't want to include this!
 #include "impexp.h"
 #include "virtmem.h"
 #include "loadfile.h"
@@ -61,27 +61,27 @@
 #include "toc.h"
 #include "walloca.h"
 
-static orl_handle       ORLHandle;
-static long             ORLFilePos;
+static orl_handle	ORLHandle;
+static long		ORLFilePos;
 
-static long             ORLSeek( void *, long, int );
-static void             *ORLRead( void *, size_t );
-static void             ClearCachedData( file_list *list );
+static long		ORLSeek( void *, long, int );
+static void		*ORLRead( void *, size_t );
+static void		ClearCachedData( file_list *list );
 
-static orl_funcs        ORLFuncs = { ORLRead, ORLSeek, ChkLAlloc, LFree };
-static orl_reloc        SavedReloc;
-static char             *ImpExternalName;
-static char             *ImpModName;
-static char             *FirstCodeSymName;
-static char             *FirstDataSymName;
-static unsigned_32      ImpOrdinal;
+static orl_funcs	ORLFuncs = { ORLRead, ORLSeek, ChkLAlloc, LFree };
+static orl_reloc	SavedReloc;
+static char		*ImpExternalName;
+static char		*ImpModName;
+static char		*FirstCodeSymName;
+static char		*FirstDataSymName;
+static unsigned_32	ImpOrdinal;
 
 
 typedef struct readcache READCACHE;
 
 typedef struct readcache {
-    READCACHE   *next;
-    void        *data;
+    READCACHE	*next;
+    void	*data;
 } readcache;
 
 static readcache   *ReadCacheList;
@@ -105,11 +105,11 @@ static long ORLSeek( void *_list, long pos, int where )
     file_list *list = _list;
 
     if( where == SEEK_SET ) {
-        ORLFilePos = pos;
+	ORLFilePos = pos;
     } else if( where == SEEK_CUR ) {
-        ORLFilePos += pos;
+	ORLFilePos += pos;
     } else {
-        ORLFilePos = list->file->len - pos;
+	ORLFilePos = list->file->len - pos;
     }
     return( ORLFilePos );
 }
@@ -117,9 +117,9 @@ static long ORLSeek( void *_list, long pos, int where )
 static void *ORLRead( void *_list, size_t len )
 /**********************************************/
 {
-    file_list   *list = _list;
-    void        *result;
-    readcache   *cache;
+    file_list	*list = _list;
+    void	*result;
+    readcache	*cache;
 
     result = CachePermRead( list, ORLFilePos, len );
     ORLFilePos += len;
@@ -134,18 +134,18 @@ bool IsORL( file_list *list, unsigned loc )
 /*************************************************/
 // return TRUE if this is can be handled by ORL
 {
-    orl_file_format     type;
-    bool                isOK;
+    orl_file_format	type;
+    bool		isOK;
 
     isOK = TRUE;
     ORLSeek( list, loc, SEEK_SET );
     type = ORLFileIdentify( ORLHandle, list );
     if( type == ORL_ELF ) {
-        ObjFormat |= FMT_ELF;
+	ObjFormat |= FMT_ELF;
     } else if( type == ORL_COFF ) {
-        ObjFormat |= FMT_COFF;
+	ObjFormat |= FMT_COFF;
     } else {
-        isOK = FALSE;
+	isOK = FALSE;
     }
     ClearCachedData( list );
     return( isOK );
@@ -154,7 +154,7 @@ bool IsORL( file_list *list, unsigned loc )
 static orl_file_handle InitFile( void )
 /*************************************/
 {
-    orl_file_format     type;
+    orl_file_format	type;
 
     ImpExternalName = NULL;
     ImpModName = NULL;
@@ -162,9 +162,9 @@ static orl_file_handle InitFile( void )
     FirstCodeSymName = NULL;
     FirstDataSymName = NULL;
     if( IS_FMT_ELF(ObjFormat) ) {
-        type = ORL_ELF;
+	type = ORL_ELF;
     } else {
-        type = ORL_COFF;
+	type = ORL_COFF;
     }
     return( ORLFileInit( ORLHandle, CurrMod->f.source, type ) );
 }
@@ -172,13 +172,13 @@ static orl_file_handle InitFile( void )
 static void ClearCachedData( file_list *list )
 /********************************************/
 {
-    readcache   *cache;
-    readcache   *next;
+    readcache	*cache;
+    readcache	*next;
 
     for( cache = ReadCacheList; cache != NULL; cache = next ) {
-        next = cache->next;
-        CacheFree( list, cache->data );
-        _LnkFree( cache );
+	next = cache->next;
+	CacheFree( list, cache->data );
+	_LnkFree( cache );
     }
     ReadCacheList = NULL;
 }
@@ -189,8 +189,8 @@ static void FiniFile( orl_file_handle filehdl, file_list *list )
     ORLFileFini( filehdl );
     ClearCachedData( list );
     if( ImpModName != NULL ) {
-        _LnkFree( ImpModName );
-        ImpModName = NULL;
+	_LnkFree( ImpModName );
+	ImpModName = NULL;
     }
 }
 
@@ -199,10 +199,10 @@ void ORLSkipObj( file_list *list, unsigned long *loc )
 // skip the object file.
 // NYI: add an entry point in ORL for a more efficient way of doing this.
 {
-    orl_file_handle     filehdl;
+    orl_file_handle	filehdl;
 
     ORLSeek( list, *loc, SEEK_SET );
-    filehdl = InitFile();               // assumes that entire file is read!
+    filehdl = InitFile();		// assumes that entire file is read!
     *loc = ORLSeek( list, 0, SEEK_CUR );
     FiniFile( filehdl, list );
 }
@@ -210,66 +210,66 @@ void ORLSkipObj( file_list *list, unsigned long *loc )
 static bool CheckFlags( orl_file_handle filehdl )
 /***********************************************/
 {
-    orl_machine_type    machtype;
-    stateflag           typemask;
-    stateflag           test;
-    orl_file_flags      flags;
+    orl_machine_type	machtype;
+    stateflag		typemask;
+    stateflag		test;
+    orl_file_flags	flags;
 
     machtype = ORLFileGetMachineType( filehdl );
     DEBUG((DBG_OLD, "objorl.CheckFlags(): machtype=%x", machtype ) );
 
     switch( machtype ) {
     case ORL_MACHINE_TYPE_AMD64: /* JWlink */
-        if ( FmtData.type & MK_PE )
-            FmtData.u.pe.win64 = 1;
-        else if ( FmtData.type & MK_ELF )
-            FmtData.u.elf.elf64 = 1;
-        typemask = HAVE_I86_CODE;
-        break;
+	if ( FmtData.type & MK_PE )
+	    FmtData.u.pe.win64 = 1;
+	else if ( FmtData.type & MK_ELF )
+	    FmtData.u.elf.elf64 = 1;
+	typemask = HAVE_I86_CODE;
+	break;
     case ORL_MACHINE_TYPE_I386:
-        typemask = HAVE_I86_CODE;
-        break;
+	typemask = HAVE_I86_CODE;
+	break;
     case ORL_MACHINE_TYPE_ALPHA:
-        typemask = HAVE_ALPHA_CODE;
-        break;
+	typemask = HAVE_ALPHA_CODE;
+	break;
     case ORL_MACHINE_TYPE_PPC601:
-        typemask = HAVE_PPC_CODE;
-        break;
+	typemask = HAVE_PPC_CODE;
+	break;
     case ORL_MACHINE_TYPE_R3000:
-        typemask = HAVE_MIPS_CODE;
-        break;
+	typemask = HAVE_MIPS_CODE;
+	break;
     case ORL_MACHINE_TYPE_NONE:
-        typemask = 0;
-        break;
+	typemask = 0;
+	break;
     default:
-        typemask = HAVE_MACHTYPE_MASK;  // trigger the error
-        break;
+	typemask = HAVE_MACHTYPE_MASK;	// trigger the error
+	break;
     }
     test = (typemask | LinkState) & HAVE_MACHTYPE_MASK;
-    test &= test - 1;           // turn off one bit
-    if( test != 0 ) {   // multiple bits were turned on.
-        LnkMsg( WRN+MSG_MACHTYPE_DIFFERENT, "s", CurrMod->f.source->file->name);
+    test &= test - 1;		// turn off one bit
+    if( test != 0 ) {	// multiple bits were turned on.
+	LnkMsg( WRN+MSG_MACHTYPE_DIFFERENT, "s", CurrMod->f.source->file->name);
     } else {
-        LinkState |= typemask;
+	LinkState |= typemask;
     }
     if( ORLFileGetType( filehdl ) != ORL_FILE_TYPE_OBJECT ) {
 		DEBUG((DBG_OLD, "objorl.CheckFlags(): error, type %h != ORL_FILE_TYPE_OBJECT", ORLFileGetType( filehdl ) ) );
-        BadObject();
-        return( FALSE );
+	BadObject();
+	return( FALSE );
     }
     flags = ORLFileGetFlags( filehdl );
 #if 0
-    if( flags & ORL_FILE_FLAG_BIG_ENDIAN ) {    // MS lies about this.
-        LnkMsg( ERR+LOC+MSG_NO_BIG_ENDIAN, NULL );
-        return( FALSE );
+    if( flags & ORL_FILE_FLAG_BIG_ENDIAN ) {	// MS lies about this.
+	LnkMsg( ERR+LOC+MSG_NO_BIG_ENDIAN, NULL );
+	return( FALSE );
     }
 #endif
     if( flags & ORL_FILE_FLAG_16BIT_MACHINE ) {
-        Set16BitMode();
+	Set16BitMode();
     } else if ( machtype == ORL_MACHINE_TYPE_AMD64 ) { /* jwlink */
-        Set64BitMode();
+	Set64BitMode();
     } else {
-        Set32BitMode();
+	Set32BitMode();
     }
     return( TRUE );
 }
@@ -294,11 +294,11 @@ static orl_return ExportCmd( char *name, void *dummy )
     lname.name = name;
 #if 1 /* JWLink: allow "internal name" suffix */
     if ( intname.name = strchr( name, '=' ) ) {
-        lname.len = intname.name - name;
-        intname.name++;
-        intname.len = strlen(intname.name);
-        HandleExport( &lname, &intname, 0, 0 );
-        return( ORL_OKAY );
+	lname.len = intname.name - name;
+	intname.name++;
+	intname.len = strlen(intname.name);
+	HandleExport( &lname, &intname, 0, 0 );
+	return( ORL_OKAY );
     }
 #endif
     lname.len = strlen(name);
@@ -321,22 +321,22 @@ static orl_return ImportCmd( char *item, void *dummy )
     intname.name = item;
     module.name = strchr( item, '=' );
     if ( module.name == NULL )
-        return( ORL_ERROR );
+	return( ORL_ERROR );
     intname.len = module.name - item;
     *module.name++ = '\0';
     if ( entry.name = strchr( module.name, '.' ) ) {
-        char *tmp;
-        if ( tmp = strchr( entry.name + 1, '.' ) )   /* module name may contain a '.' */
-            entry.name = tmp;
-        module.len = entry.name - module.name;
-        *entry.name++ = '\0';
-        entry.len = strlen( entry.name );
-        if ( isdigit( *entry.name ) )
-            ordinal = atol( entry.name );
+	char *tmp;
+	if ( tmp = strchr( entry.name + 1, '.' ) )   /* module name may contain a '.' */
+	    entry.name = tmp;
+	module.len = entry.name - module.name;
+	*entry.name++ = '\0';
+	entry.len = strlen( entry.name );
+	if ( isdigit( *entry.name ) )
+	    ordinal = atol( entry.name );
     } else {
-        module.len = strlen( module.name );
-        entry.name = intname.name;
-        entry.len = intname.len;
+	module.len = strlen( module.name );
+	entry.name = intname.name;
+	entry.len = intname.len;
     }
     DEBUG((DBG_OLD, "ImportCmd: intname=%s module=%s entry=%s", intname.name, module.name, entry.name ));
     HandleImport( &intname, &module, ordinal == NOT_IMP_BY_ORDINAL ? &entry : NULL, ordinal );
@@ -348,16 +348,16 @@ static orl_return EntryCmd( char *name, void *dummy )
 {
     if( !StartInfo.user_specd ) {
 #if 1 /* JWLink: add underscore prefix for 32-bit PE */
-        if ( ( FmtData.type & MK_PE ) && FmtData.u.pe.win64 == 0 ) {
-            char *tmpname;
-            int i = strlen( name );
-            tmpname = alloca( i + 2 );
-            tmpname[0] = '_';
-            strcpy( tmpname+1, name );
-            SetStartSym( tmpname );
-        } else
+	if ( ( FmtData.type & MK_PE ) && FmtData.u.pe.win64 == 0 ) {
+	    char *tmpname;
+	    int i = strlen( name );
+	    tmpname = alloca( i + 2 );
+	    tmpname[0] = '_';
+	    strcpy( tmpname+1, name );
+	    SetStartSym( tmpname );
+	} else
 #endif
-            SetStartSym( name );
+	    SetStartSym( name );
     }
     return( ORL_OKAY );
 }
@@ -370,21 +370,105 @@ static orl_return DeflibCmd( char *name, void *dummy )
     dummy = dummy;
     /* library name may be enclosed in double quotes! */
     for( ; *name; ) {
-        if ( *name == '"' ) {
-            name++;
-            end = strchr( name, '"' );
-            if ( end == NULL )
-                return( ORL_ERROR );
-            *end++ = '\0';
-        } else {
-            for ( end = name; *end ; end++ )
-                if ( *end == ' ' || *end == '\t' || *end == ',' )
-                    break;
-            if ( *end )
-                *end++ = '\0';
-        }
-        AddCommentLib( name, strlen(name), LIB_PRIORITY_MAX - 1 );
-        name = end;
+	if ( *name == '"' ) {
+	    name++;
+	    end = strchr( name, '"' );
+	    if ( end == NULL )
+		return( ORL_ERROR );
+	    *end++ = '\0';
+	} else {
+	    for ( end = name; *end ; end++ )
+		if ( *end == ' ' || *end == '\t' || *end == ',' )
+		    break;
+	    if ( *end )
+		*end++ = '\0';
+	}
+	AddCommentLib( name, strlen(name), LIB_PRIORITY_MAX - 1 );
+	name = end;
+    }
+    return( ORL_OKAY );
+}
+
+extern f_handle		QOpenRW( char * );
+extern unsigned		QRead( f_handle, void *, unsigned, char * );
+extern unsigned		QWrite( f_handle, void *, unsigned, char * );
+extern void		QClose( f_handle, char * );
+
+static orl_return ManifestCmd( char *name, void *dummy )
+{
+    char *end;
+    char file[256];
+    f_handle h;
+
+    dummy = dummy;
+
+    if ( *name ) {
+
+	if ( *name == '"' ) {
+	    name++;
+	    end = strrchr( name, '"' );
+	    if ( end == NULL )
+		return( ORL_ERROR );
+	    *end++ = '\0';
+	} else {
+	    for ( end = name; *end ; end++ )
+		if ( *end == ' ' || *end == '\t' || *end == ',' )
+		    break;
+	    if ( *end )
+		*end++ = '\0';
+	}
+
+	strcpy( file, CurrMod->f.source->file->name );
+	end = strrchr( file, '.' );
+	if ( end )
+	    *end = '\0';
+	strcat( file, ".exe.manifest" );
+#if 1
+	h = QOpenRW( file );
+	if ( h != -1 ) {
+	    QWrite( h,
+		"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\r\n"
+		"<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>\r\n"
+		"  <trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v3\">\r\n"
+		"    <security>\r\n"
+		"      <requestedPrivileges>\r\n"
+		"        <requestedExecutionLevel level='asInvoker' uiAccess='false' />\r\n"
+		"      </requestedPrivileges>\r\n"
+		"    </security>\r\n"
+		"  </trustInfo>\r\n"
+		"  <dependency>\r\n"
+		"    <dependentAssembly>\r\n"
+		"      <assemblyIdentity ", 433, file );
+	    QWrite( h, name, strlen( name ), file );
+	    QWrite( h,
+		" />\r\n"
+		"    </dependentAssembly>\r\n"
+		"  </dependency>\r\n"
+		"</assembly>", 59, file );
+	    QClose( h, file );
+	}
+#else
+	fp = fopen( file, "wt" );
+	if ( fp != NULL ) {
+	    fprintf(fp,
+		"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n"
+		"<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>\n"
+		"  <trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v3\">\n"
+		"    <security>\n"
+		"      <requestedPrivileges>\n"
+		"        <requestedExecutionLevel level='asInvoker' uiAccess='false' />\n"
+		"      </requestedPrivileges>\n"
+		"    </security>\n"
+		"  </trustInfo>\n"
+		"  <dependency>\n"
+		"    <dependentAssembly>\n"
+		"      <assemblyIdentity %s />\n"
+		"    </dependentAssembly>\n"
+		"  </dependency>\n"
+		"</assembly>", name);
+	    fclose(fp);
+	}
+#endif
     }
     return( ORL_OKAY );
 }
@@ -396,9 +480,10 @@ struct cmditem {
 
 static const struct cmditem cmdtab[] = {
     { "defaultlib", DeflibCmd },
-    { "entry"     , EntryCmd  },
-    { "export"    , ExportCmd },
-    { "import"    , ImportCmd },
+    { "entry"	  , EntryCmd  },
+    { "export"	  , ExportCmd },
+    { "import"	  , ImportCmd },
+    { "manifestdependency", ManifestCmd },
 };
 #define NUMLNKCMDS ( sizeof( cmdtab ) / sizeof( cmdtab[0] ) )
 
@@ -409,8 +494,8 @@ static orl_return LnkCmdCallback( char *cmd, char *value, void *dummy )
     DEBUG((DBG_OLD, "LnkCmdCallback: cmd=%s, value=%s", cmd, value ));
 
     for( i = 0; i < NUMLNKCMDS; i++ )
-        if ( strcmp( cmd, cmdtab[i].cmd ) == 0 )
-            return( cmdtab[i].pfn( value, dummy ) );
+	if ( strcmp( cmd, cmdtab[i].cmd ) == 0 )
+	    return( cmdtab[i].pfn( value, dummy ) );
 
     LnkMsg( WRN+LOC+MSG_UNKNOWN_DIRECTIVE_IGNORED, "s", cmd );
     return( ORL_OKAY );
@@ -442,116 +527,116 @@ static orl_return Unsupported( orl_sec_handle dummy )
 static void AllocSeg( void *_snode, void *dummy )
 /***********************************************/
 {
-    segnode             *snode = _snode;
-    segdata             *sdata;
-    char                *clname;
-    char                *sname;
-    group_entry         *group;
-    bool                isdbi;
+    segnode		*snode = _snode;
+    segdata		*sdata;
+    char		*clname;
+    char		*sname;
+    group_entry		*group;
+    bool		isdbi;
 
     dummy = dummy;
     sdata = snode->entry;
     if( sdata == NULL )
-        return;
+	return;
     DbgAssert( sdata->u.name );
     DEBUG((DBG_OLD,"objorl: AllocSeg() - %s iscode=%d isuninit=%d isreadonly=%d isidata=%d iscdat=%d snode.info=%h",
-           sdata->u.name, sdata->iscode, sdata->isuninit, sdata->isreadonly, sdata->isidata, sdata->iscdat, snode->info ));
+	   sdata->u.name, sdata->iscode, sdata->isuninit, sdata->isreadonly, sdata->isidata, sdata->iscdat, snode->info ));
     sname = sdata->u.name;
     if( CurrMod->modinfo & MOD_IMPORT_LIB ) {
-        if( sdata->isidata || sdata->iscode ) {
-            if( sdata->iscode ) {
-                snode->info |= SEG_CODE;
-            }
-            if ( sdata->isreadonly ) { /* jwlink */
-                snode->info |= SEG_READ_ONLY;
-            }
-            snode->info |= SEG_DEAD;
-            DEBUG((DBG_OLD,"objorl: AllocSeg() - SEG_DEAD is ON (1)" ));
-            snode->entry = NULL;
-            FreeSegData( sdata );
-            return;
-        }
+	if( sdata->isidata || sdata->iscode ) {
+	    if( sdata->iscode ) {
+		snode->info |= SEG_CODE;
+	    }
+	    if ( sdata->isreadonly ) { /* jwlink */
+		snode->info |= SEG_READ_ONLY;
+	    }
+	    snode->info |= SEG_DEAD;
+	    DEBUG((DBG_OLD,"objorl: AllocSeg() - SEG_DEAD is ON (1)" ));
+	    snode->entry = NULL;
+	    FreeSegData( sdata );
+	    return;
+	}
     }
     isdbi = FALSE;
     if( memicmp( CoffDebugPrefix, sdata->u.name,
-                sizeof(CoffDebugPrefix) - 1 ) == 0 ) {
-        if( CurrMod->modinfo & MOD_IMPORT_LIB ) {
-            DEBUG((DBG_OLD,"objorl: AllocSeg() - SEG_DEAD is ON (2)" ));
-            snode->info |= SEG_DEAD;
-            snode->entry = NULL;
-            FreeSegData( sdata );
-            return;
-        }
-        isdbi = TRUE;
-        if( stricmp(CoffDebugSymName, sdata->u.name ) == 0 ) {
-            clname = _MSLocalClass;
-        } else if( stricmp(CoffDebugTypeName, sdata->u.name ) == 0 ) {
-            clname = _MSTypeClass;
-        } else {
-            clname = _DwarfClass;
-        }
+		sizeof(CoffDebugPrefix) - 1 ) == 0 ) {
+	if( CurrMod->modinfo & MOD_IMPORT_LIB ) {
+	    DEBUG((DBG_OLD,"objorl: AllocSeg() - SEG_DEAD is ON (2)" ));
+	    snode->info |= SEG_DEAD;
+	    snode->entry = NULL;
+	    FreeSegData( sdata );
+	    return;
+	}
+	isdbi = TRUE;
+	if( stricmp(CoffDebugSymName, sdata->u.name ) == 0 ) {
+	    clname = _MSLocalClass;
+	} else if( stricmp(CoffDebugTypeName, sdata->u.name ) == 0 ) {
+	    clname = _MSTypeClass;
+	} else {
+	    clname = _DwarfClass;
+	}
     } else if( memicmp( TLSSegPrefix, sdata->u.name,
-                        sizeof(TLSSegPrefix) - 1 ) == 0 ) {
-        clname = TLSClassName;
+			sizeof(TLSSegPrefix) - 1 ) == 0 ) {
+	clname = TLSClassName;
     } else if( sdata->iscode ) {
-        clname = CodeClassName;
+	clname = CodeClassName;
     } else if( sdata->isuninit ) {
-        clname = BSSClassName;
+	clname = BSSClassName;
     } else if ( ( FmtData.type & (MK_PE|MK_ELF) ) && ( sdata->isreadonly ) ) { /* jwlink */
-        clname = ConstClassName;
+	clname = ConstClassName;
     } else {
-        clname = DataClassName;
-        if( memcmp( sname, CoffPDataSegName, sizeof(CoffPDataSegName) ) == 0 ) {
-            sdata->ispdata = TRUE;
-        } else if( memcmp(sname, CoffReldataSegName,
-                                   sizeof(CoffReldataSegName) ) == 0 ) {
-            sdata->isreldata = TRUE;
-        }
+	clname = DataClassName;
+	if( memcmp( sname, CoffPDataSegName, sizeof(CoffPDataSegName) ) == 0 ) {
+	    sdata->ispdata = TRUE;
+	} else if( memcmp(sname, CoffReldataSegName,
+				   sizeof(CoffReldataSegName) ) == 0 ) {
+	    sdata->isreldata = TRUE;
+	}
     }
     DEBUG((DBG_OLD,"objorl: AllocSeg() - classname=%s", clname ));
     AllocateSegment( snode, clname );
     if( clname == TLSClassName ) {
-        group = GetGroup( TLSGrpName );
-        AddToGroup( group, snode->entry->u.leader );
-    } else if( !sdata->iscode && !isdbi  ) {
+	group = GetGroup( TLSGrpName );
+	AddToGroup( group, snode->entry->u.leader );
+    } else if( !sdata->iscode && !isdbi	 ) {
 #if 1 /* JWLink */
-        if( ( FmtData.type & MK_PE ) && FmtData.u.pe.win64 &&
-           ( memcmp( sname, ".pdata", 6 ) == 0 ) &&
-           ( *(sname+6) == '\0' || *(sname+6) == '$' ) )
-            group = GetGroup( ".pdata" );
-        else if( sdata->isreadonly && ( FmtData.type & (MK_PE|MK_ELF) ) )
-            group = GetGroup( ".rdata" );
-        else
+	if( ( FmtData.type & MK_PE ) && FmtData.u.pe.win64 &&
+	   ( memcmp( sname, ".pdata", 6 ) == 0 ) &&
+	   ( *(sname+6) == '\0' || *(sname+6) == '$' ) )
+	    group = GetGroup( ".pdata" );
+	else if( sdata->isreadonly && ( FmtData.type & (MK_PE|MK_ELF) ) )
+	    group = GetGroup( ".rdata" );
+	else
 #endif
-            group = GetGroup( DataGrpName );
-        AddToGroup( group, snode->entry->u.leader );
+	    group = GetGroup( DataGrpName );
+	AddToGroup( group, snode->entry->u.leader );
     }
     if( sdata->isuninit ) {
-        snode->contents = NULL;
+	snode->contents = NULL;
     } else {
-        snode->entry->u.leader->info |= SEG_LXDATA_SEEN;
-        if( !sdata->isdead ) {
-            ORLSecGetContents( snode->handle, &snode->contents );
-            if( !sdata->iscdat && ( snode->contents != NULL )) {
-                PutInfo( sdata->data, snode->contents, sdata->length );
-            }
-        }
+	snode->entry->u.leader->info |= SEG_LXDATA_SEEN;
+	if( !sdata->isdead ) {
+	    ORLSecGetContents( snode->handle, &snode->contents );
+	    if( !sdata->iscdat && ( snode->contents != NULL )) {
+		PutInfo( sdata->data, snode->contents, sdata->length );
+	    }
+	}
     }
 }
 
 static void DefNosymComdats( void *_snode, void *dummy )
 /******************************************************/
 {
-    segnode             *snode = _snode;
-    segdata             *sdata;
+    segnode		*snode = _snode;
+    segdata		*sdata;
 
     dummy = dummy;
     sdata = snode->entry;
     if( sdata == NULL || snode->info & SEG_DEAD )
-        return;
+	return;
     if( sdata->iscdat && !sdata->hascdatsym && ( snode->contents != NULL )) {
-        sdata->data = AllocStg( sdata->length );
-        PutInfo( sdata->data, snode->contents, sdata->length );
+	sdata->data = AllocStg( sdata->length );
+	PutInfo( sdata->data, snode->contents, sdata->length );
     }
 }
 
@@ -559,19 +644,19 @@ static orl_return DeclareSegment( orl_sec_handle sec )
 /****************************************************/
 // declare the "segment"
 {
-    segdata             *sdata;
-    segnode             *snode;
-    char                *name;
+    segdata		*sdata;
+    segnode		*snode;
+    char		*name;
     unsigned_32 UNALIGN *contents;
-    size_t              len;
-    orl_sec_flags       flags;
-    orl_sec_type        type;
-    unsigned            numlines;
-    unsigned            segidx;
+    size_t		len;
+    orl_sec_flags	flags;
+    orl_sec_type	type;
+    unsigned		numlines;
+    unsigned		segidx;
 
     type = ORLSecGetType( sec );
     if( type != ORL_SEC_TYPE_NO_BITS && type != ORL_SEC_TYPE_PROG_BITS ) {
-         return( ORL_OKAY );
+	 return( ORL_OKAY );
     }
     flags = ORLSecGetFlags( sec );
     name = ORLSecGetName( sec );
@@ -584,52 +669,52 @@ static orl_return DeclareSegment( orl_sec_handle sec )
     sdata->iscdat = (flags & ORL_SEC_FLAG_COMDAT) != 0;
     len = sizeof( CoffIDataSegName ) - 1;
     if( strnicmp( CoffIDataSegName, name, len ) == 0 ) {
-        SeenDLLRecord();
-        CurrMod->modinfo |= MOD_IMPORT_LIB;
-        /* .idata$4, .idata$5 (IAT) and .idata$6 */
-        if( name[len + 1] == '6' ) {    /* .idata$6 - is to contain the import's name */
-            ORLSecGetContents( sec, (unsigned_8 **)&ImpExternalName );
-            ImpExternalName += 2;
-        } else if( name[len + 1] == '4' ) {     /* .idata$4 - is to contain imports by ordinal */
-            /* jwlink v19b9: check for error */
-            if ( ORLSecGetContents( sec, (void *) &contents ) == ORL_ERROR ) {
-                DEBUG((DBG_OLD, "objorl.DeclareSegment(%s): ORLSecGetContents() returned with error ", name ));
-            } else
-                ImpOrdinal = *contents;
-        }
-        sdata->isdead = TRUE;
-        sdata->isidata = TRUE;
+	SeenDLLRecord();
+	CurrMod->modinfo |= MOD_IMPORT_LIB;
+	/* .idata$4, .idata$5 (IAT) and .idata$6 */
+	if( name[len + 1] == '6' ) {	/* .idata$6 - is to contain the import's name */
+	    ORLSecGetContents( sec, (unsigned_8 **)&ImpExternalName );
+	    ImpExternalName += 2;
+	} else if( name[len + 1] == '4' ) {	/* .idata$4 - is to contain imports by ordinal */
+	    /* jwlink v19b9: check for error */
+	    if ( ORLSecGetContents( sec, (void *) &contents ) == ORL_ERROR ) {
+		DEBUG((DBG_OLD, "objorl.DeclareSegment(%s): ORLSecGetContents() returned with error ", name ));
+	    } else
+		ImpOrdinal = *contents;
+	}
+	sdata->isdead = TRUE;
+	sdata->isidata = TRUE;
     }
     sdata->combine = COMBINE_ADD;
     if( flags & ORL_SEC_FLAG_NO_PADDING ) {
-        sdata->align = 0;
+	sdata->align = 0;
     } else {
-        sdata->align = ORLSecGetAlignment( sec );
+	sdata->align = ORLSecGetAlignment( sec );
     }
     sdata->is32bit = TRUE;
     sdata->length = ORLSecGetSize( sec );
     sdata->u.name = name;
     if( flags & ORL_SEC_FLAG_EXEC ) {
-        sdata->iscode = TRUE;
+	sdata->iscode = TRUE;
     } else if( ( flags & ( ORL_SEC_FLAG_READ_PERMISSION | ORL_SEC_FLAG_WRITE_PERMISSION ) ) ==
-              ORL_SEC_FLAG_READ_PERMISSION ) {
-        sdata->isreadonly = TRUE;  /* jwlink */
+	      ORL_SEC_FLAG_READ_PERMISSION ) {
+	sdata->isreadonly = TRUE;  /* jwlink */
     } else if( flags & ORL_SEC_FLAG_UNINITIALIZED_DATA ) {
-        sdata->isuninit = TRUE;
+	sdata->isuninit = TRUE;
 #if _DEVELOPMENT == _ON
     } else {
-        unsigned namelen;
+	unsigned namelen;
 
-        namelen = strlen(name);
-        if( namelen >= 3 && memicmp(name + namelen - 3, "bss", 3) == 0 ) {
-            LnkMsg( ERR+MSG_INTERNAL, "s", "Initialized BSS found" );
-        }
+	namelen = strlen(name);
+	if( namelen >= 3 && memicmp(name + namelen - 3, "bss", 3) == 0 ) {
+	    LnkMsg( ERR+MSG_INTERNAL, "s", "Initialized BSS found" );
+	}
 #endif
     }
     numlines = ORLSecGetNumLines( sec );
     if( numlines > 0 ) {
-        numlines *= sizeof(orl_linnum);
-        DBIAddLines( sdata, ORLSecGetLines( sec ), numlines, TRUE );
+	numlines *= sizeof(orl_linnum);
+	DBIAddLines( sdata, ORLSecGetLines( sec ), numlines, TRUE );
     }
     DEBUG((DBG_OLD, "objorl.DeclareSegment(): %s iscdat=%d", name, sdata->iscdat ));
     return( ORL_OKAY );
@@ -638,65 +723,65 @@ static orl_return DeclareSegment( orl_sec_handle sec )
 static segnode *FindSegNode( orl_sec_handle sechdl )
 /***************************************************/
 {
-    orl_table_index     idx;
+    orl_table_index	idx;
 
     if( sechdl == NULL )
-        return( NULL );
+	return( NULL );
     idx = ORLCvtSecHdlToIdx( sechdl );
     if( idx == 0 ) {
-        return( NULL );
+	return( NULL );
     } else {
-        return( FindNode( SegNodes, idx ) );
+	return( FindNode( SegNodes, idx ) );
     }
 }
 
 #define PREFIX_LEN (sizeof(ImportSymPrefix) - 1)
 
 static void ImpProcSymbol( segnode *snode, orl_symbol_type type, char *name,
-                           size_t namelen )
+			   size_t namelen )
 /***************************************************************************/
 {
     if( type & ORL_SYM_TYPE_UNDEFINED ) {
-        if( namelen > sizeof(CoffImportRefName) - 1 ) {
-            namelen -= sizeof(CoffImportRefName) - 1;
-            if( memicmp( name + namelen, CoffImportRefName,
-                         sizeof(CoffImportRefName) - 1 ) == 0 ) {
-                _ChkAlloc( ImpModName, namelen + 5 );
-                memcpy( ImpModName, name, namelen );
-                if( memicmp( CurrMod->name + strlen(CurrMod->name)
-                             - 4, ".drv", 4 ) == 0 ) { //KLUDGE!!
-                    memcpy( ImpModName + namelen, ".drv", 5 );
-                } else {
-                    memcpy( ImpModName + namelen, ".dll", 5 );
-                }
-            }
-        }
+	if( namelen > sizeof(CoffImportRefName) - 1 ) {
+	    namelen -= sizeof(CoffImportRefName) - 1;
+	    if( memicmp( name + namelen, CoffImportRefName,
+			 sizeof(CoffImportRefName) - 1 ) == 0 ) {
+		_ChkAlloc( ImpModName, namelen + 5 );
+		memcpy( ImpModName, name, namelen );
+		if( memicmp( CurrMod->name + strlen(CurrMod->name)
+			     - 4, ".drv", 4 ) == 0 ) { //KLUDGE!!
+		    memcpy( ImpModName + namelen, ".drv", 5 );
+		} else {
+		    memcpy( ImpModName + namelen, ".dll", 5 );
+		}
+	    }
+	}
     } else if( snode != NULL && snode->info & SEG_CODE ) {
-        if( FirstCodeSymName == NULL ) {
-            FirstCodeSymName = name;
-        }
+	if( FirstCodeSymName == NULL ) {
+	    FirstCodeSymName = name;
+	}
     } else {
-        if( FirstDataSymName == NULL &&
-                memcmp( name, ImportSymPrefix, PREFIX_LEN ) == 0 ) {
-            FirstDataSymName = name + PREFIX_LEN;
-        }
+	if( FirstDataSymName == NULL &&
+		memcmp( name, ImportSymPrefix, PREFIX_LEN ) == 0 ) {
+	    FirstDataSymName = name + PREFIX_LEN;
+	}
     }
 }
 
 static void DefineComdatSym( segnode *seg, symbol *sym, orl_symbol_value value )
 /******************************************************************************/
 {
-    unsigned    select;
-    sym_info    sym_type;
-    segdata     *sdata;
+    unsigned	select;
+    sym_info	sym_type;
+    segdata	*sdata;
 
     sdata = seg->entry;
     sdata->hascdatsym = TRUE;
     select = sdata->select;
     if( select == 0 ) {
-        sym_type = SYM_CDAT_SEL_ANY;
+	sym_type = SYM_CDAT_SEL_ANY;
     } else {
-        sym_type = (select - 1) << SYM_CDAT_SEL_SHIFT;
+	sym_type = (select - 1) << SYM_CDAT_SEL_SHIFT;
     }
     DefineComdat( sdata, sym, value, sym_type, seg->contents );
 }
@@ -704,19 +789,19 @@ static void DefineComdatSym( segnode *seg, symbol *sym, orl_symbol_value value )
 static orl_return ProcSymbol( orl_symbol_handle symhdl )
 /******************************************************/
 {
-    orl_symbol_type     type;
-    char                *name;
-    orl_symbol_value    value;
-    orl_sec_handle      sechdl;
-    symbol              *sym;
-    size_t              namelen;
-    sym_flags           symop;
-    extnode             *newnode;
-    segnode             *snode;
-    bool                isweak;
-    orl_symbol_handle   assocsymhdl;
-    symbol              *assocsym;
-    orl_symbol_binding  binding;
+    orl_symbol_type	type;
+    char		*name;
+    orl_symbol_value	value;
+    orl_sec_handle	sechdl;
+    symbol		*sym;
+    size_t		namelen;
+    sym_flags		symop;
+    extnode		*newnode;
+    segnode		*snode;
+    bool		isweak;
+    orl_symbol_handle	assocsymhdl;
+    symbol		*assocsym;
+    orl_symbol_binding	binding;
 
     sechdl = ORLSymbolGetSecHandle( symhdl );
     snode = FindSegNode( sechdl );
@@ -724,92 +809,92 @@ static orl_return ProcSymbol( orl_symbol_handle symhdl )
     name = ORLSymbolGetName( symhdl );
 	DEBUG((DBG_OLD, "objorl.ProcSymbol(%s) enter", name ));
     if( type & ORL_SYM_TYPE_FILE ) {
-        if( !(CurrMod->modinfo & MOD_GOT_NAME) ) {
-            CurrMod->modinfo |= MOD_GOT_NAME;
-            _LnkFree( CurrMod->name );
-            CurrMod->name = AddStringStringTable( &PermStrings, name );
-        }
-        return( ORL_OKAY );
+	if( !(CurrMod->modinfo & MOD_GOT_NAME) ) {
+	    CurrMod->modinfo |= MOD_GOT_NAME;
+	    _LnkFree( CurrMod->name );
+	    CurrMod->name = AddStringStringTable( &PermStrings, name );
+	}
+	return( ORL_OKAY );
     }
     if( type & ORL_SYM_TYPE_DEBUG )
-        return( ORL_OKAY );
+	return( ORL_OKAY );
     if( type & (ORL_SYM_TYPE_OBJECT|ORL_SYM_TYPE_FUNCTION) ||
-        (type & (ORL_SYM_TYPE_NOTYPE|ORL_SYM_TYPE_UNDEFINED) &&
-         name != NULL)) {
-        namelen = strlen( name );
-        if( namelen == 0 ) {
-            DEBUG((DBG_OLD, "objorl.ProcSymbol(): error, namelen == 0" ));
-            BadObject();
-        }
+	(type & (ORL_SYM_TYPE_NOTYPE|ORL_SYM_TYPE_UNDEFINED) &&
+	 name != NULL)) {
+	namelen = strlen( name );
+	if( namelen == 0 ) {
+	    DEBUG((DBG_OLD, "objorl.ProcSymbol(): error, namelen == 0" ));
+	    BadObject();
+	}
 
-        /* jwlink: this is probably not correct. Not all symbols in an import lib
-         * are necessarily to be handled by ImpProcSymbol()
-         */
-        if( CurrMod->modinfo & MOD_IMPORT_LIB ) {
-            DEBUG((DBG_OLD, "objorl.ProcSymbol(): calling ImpProcSymbol()" ));
-            ImpProcSymbol( snode, type, name, namelen );
-            return( ORL_OKAY );
-        }
+	/* jwlink: this is probably not correct. Not all symbols in an import lib
+	 * are necessarily to be handled by ImpProcSymbol()
+	 */
+	if( CurrMod->modinfo & MOD_IMPORT_LIB ) {
+	    DEBUG((DBG_OLD, "objorl.ProcSymbol(): calling ImpProcSymbol()" ));
+	    ImpProcSymbol( snode, type, name, namelen );
+	    return( ORL_OKAY );
+	}
 
-        newnode = AllocNode( ExtNodes );
-        newnode->handle = symhdl;
-        binding = ORLSymbolGetBinding( symhdl );
-        symop = ST_CREATE;
-        if( binding == ORL_SYM_BINDING_LOCAL ) {
-            //symop |= ST_STATIC;
-            symop |= ST_STATIC | ST_DUPLICATE;
-        }
-        if( type & ORL_SYM_TYPE_UNDEFINED && binding != ORL_SYM_BINDING_ALIAS ){
-            symop |= ST_REFERENCE;
-        } else {
-            symop |= ST_NOALIAS;
-        }
-        sym = SymOp( symop, name, namelen );
-        CheckIfTocSym( sym );
-        if( type & ORL_SYM_TYPE_COMMON ) {
+	newnode = AllocNode( ExtNodes );
+	newnode->handle = symhdl;
+	binding = ORLSymbolGetBinding( symhdl );
+	symop = ST_CREATE;
+	if( binding == ORL_SYM_BINDING_LOCAL ) {
+	    //symop |= ST_STATIC;
+	    symop |= ST_STATIC | ST_DUPLICATE;
+	}
+	if( type & ORL_SYM_TYPE_UNDEFINED && binding != ORL_SYM_BINDING_ALIAS ){
+	    symop |= ST_REFERENCE;
+	} else {
+	    symop |= ST_NOALIAS;
+	}
+	sym = SymOp( symop, name, namelen );
+	CheckIfTocSym( sym );
+	if( type & ORL_SYM_TYPE_COMMON ) {
 			DEBUG((DBG_OLD, "objorl.ProcSymbol(%s): type ORL_SYM_TYPE_COMMON", name ));
-            value = ORLSymbolGetValue( symhdl );
-            sym = MakeCommunalSym( sym, value, FALSE, TRUE );
-        } else if( type & ORL_SYM_TYPE_UNDEFINED ) {
+	    value = ORLSymbolGetValue( symhdl );
+	    sym = MakeCommunalSym( sym, value, FALSE, TRUE );
+	} else if( type & ORL_SYM_TYPE_UNDEFINED ) {
 			DEBUG((DBG_OLD, "objorl.ProcSymbol(%s): type ORL_SYM_TYPE_UNDEFINED", name ));
-            DefineReference( sym );
-            isweak = FALSE;
-            switch( binding ) {
-            case ORL_SYM_BINDING_WEAK:
-                isweak = TRUE;
-            case ORL_SYM_BINDING_ALIAS:
-            case ORL_SYM_BINDING_LAZY:
-                assocsymhdl = ORLSymbolGetAssociated( symhdl );
-                name = ORLSymbolGetName( assocsymhdl );
-                namelen = strlen(name);
-                if( binding == ORL_SYM_BINDING_ALIAS ) {
-                    MakeSymAlias( sym->name, strlen(sym->name), name, namelen );
-                } else {
-                    assocsym = SymOp( ST_CREATE | ST_REFERENCE, name, namelen );
-                    DefineLazyExtdef( sym, assocsym, isweak );
-                    newnode->isweak = TRUE;
-                }
-            }
-        } else {
+	    DefineReference( sym );
+	    isweak = FALSE;
+	    switch( binding ) {
+	    case ORL_SYM_BINDING_WEAK:
+		isweak = TRUE;
+	    case ORL_SYM_BINDING_ALIAS:
+	    case ORL_SYM_BINDING_LAZY:
+		assocsymhdl = ORLSymbolGetAssociated( symhdl );
+		name = ORLSymbolGetName( assocsymhdl );
+		namelen = strlen(name);
+		if( binding == ORL_SYM_BINDING_ALIAS ) {
+		    MakeSymAlias( sym->name, strlen(sym->name), name, namelen );
+		} else {
+		    assocsym = SymOp( ST_CREATE | ST_REFERENCE, name, namelen );
+		    DefineLazyExtdef( sym, assocsym, isweak );
+		    newnode->isweak = TRUE;
+		}
+	    }
+	} else {
 			DEBUG((DBG_OLD, "objorl.ProcSymbol(%s): type=%h", name, type ));
-            newnode->isdefd = TRUE;
-            value = ORLSymbolGetValue( symhdl );
-            if( type & ORL_SYM_TYPE_COMMON && type & ORL_SYM_TYPE_OBJECT
-                        && sechdl == NULL) {
-                sym = MakeCommunalSym( sym, value, FALSE, TRUE );
-            } else if( snode != NULL && snode->entry != NULL
-                                     && snode->entry->iscdat ) {
-                DefineComdatSym( snode, sym, value );
-            } else {
+	    newnode->isdefd = TRUE;
+	    value = ORLSymbolGetValue( symhdl );
+	    if( type & ORL_SYM_TYPE_COMMON && type & ORL_SYM_TYPE_OBJECT
+			&& sechdl == NULL) {
+		sym = MakeCommunalSym( sym, value, FALSE, TRUE );
+	    } else if( snode != NULL && snode->entry != NULL
+				     && snode->entry->iscdat ) {
+		DefineComdatSym( snode, sym, value );
+	    } else {
 				DEBUG((DBG_OLD, "objorl.ProcSymbol(%s info=%h): calling DefineSymbol", name, sym->info ));
-                sym->info |= SYM_DEFINED;
-                DefineSymbol( sym, snode, value, 0 );
-            }
-        }
-        newnode->entry = sym;
+		sym->info |= SYM_DEFINED;
+		DefineSymbol( sym, snode, value, 0 );
+	    }
+	}
+	newnode->entry = sym;
     } else if( type & ORL_SYM_TYPE_SECTION && type & ORL_SYM_CDAT_MASK
-                            && snode != NULL && !(snode->info & SEG_DEAD) ) {
-        snode->entry->select = (type & ORL_SYM_CDAT_MASK) >> ORL_SYM_CDAT_SHIFT;
+			    && snode != NULL && !(snode->info & SEG_DEAD) ) {
+	snode->entry->select = (type & ORL_SYM_CDAT_MASK) >> ORL_SYM_CDAT_SHIFT;
     }
     return( ORL_OKAY );
 }
@@ -823,16 +908,16 @@ static orl_return SymTable( orl_sec_handle sec )
 static orl_return DoReloc( orl_reloc *reloc )
 /*******************************************/
 {
-    fix_type    type;
-    frame_spec  frame;
-    frame_spec  targ;
-    offset      addend;
-    unsigned    adjust;
-    segnode     *seg;
-    segnode     *symseg;
-    extnode     *ext;
-    bool        skip;
-    bool        istoc;
+    fix_type	type;
+    frame_spec	frame;
+    frame_spec	targ;
+    offset	addend;
+    unsigned	adjust;
+    segnode	*seg;
+    segnode	*symseg;
+    extnode	*ext;
+    bool	skip;
+    bool	istoc;
 
 	DEBUG((DBG_OLD, "objorl.DoReloc(): enter" ));
     skip = FALSE;
@@ -840,138 +925,138 @@ static orl_return DoReloc( orl_reloc *reloc )
     type = 0;
     switch( reloc->type ) {
     case ORL_RELOC_TYPE_PAIR:
-        skip = TRUE;
-        break;
+	skip = TRUE;
+	break;
     case ORL_RELOC_TYPE_ABSOLUTE:
-        type = FIX_OFFSET_32 | FIX_ABS;
-        break;
+	type = FIX_OFFSET_32 | FIX_ABS;
+	break;
     case ORL_RELOC_TYPE_WORD_16:
-        type = FIX_OFFSET_16;
-        break;
+	type = FIX_OFFSET_16;
+	break;
     case ORL_RELOC_TYPE_WORD_26:
-        type = FIX_OFFSET_26 | FIX_SHIFT;
-        break;
+	type = FIX_OFFSET_26 | FIX_SHIFT;
+	break;
     case ORL_RELOC_TYPE_TOCREL_14:  // relative ref to 14-bit offset from TOC base.
-        type = FIX_SHIFT;           // NOTE fall through
+	type = FIX_SHIFT;	    // NOTE fall through
     case ORL_RELOC_TYPE_TOCREL_16:  // relative ref to 16-bit offset from TOC base.
-    case ORL_RELOC_TYPE_GOT_16:     // relative ref to 16-bit offset from TOC base.
-        type |= FIX_TOC | FIX_OFFSET_16;
-        istoc = TRUE;
-        break;
+    case ORL_RELOC_TYPE_GOT_16:	    // relative ref to 16-bit offset from TOC base.
+	type |= FIX_TOC | FIX_OFFSET_16;
+	istoc = TRUE;
+	break;
     case ORL_RELOC_TYPE_TOCVREL_14:  // relative ref to 14-bit offset from TOC base.
-        type = FIX_SHIFT;        // NOTE fall through
+	type = FIX_SHIFT;	 // NOTE fall through
     case ORL_RELOC_TYPE_TOCVREL_16:  // relative ref to 16-bit offset from TOC base.
-        type |= FIX_TOCV | FIX_OFFSET_16;
-        break;
+	type |= FIX_TOCV | FIX_OFFSET_16;
+	break;
     case ORL_RELOC_TYPE_IFGLUE:
-        type = FIX_IFGLUE | FIX_OFFSET_32;
-        break;
+	type = FIX_IFGLUE | FIX_OFFSET_32;
+	break;
     case ORL_RELOC_TYPE_IMGLUE:
-        skip = TRUE;                 // NYI: do we need this?
-        break;
+	skip = TRUE;		     // NYI: do we need this?
+	break;
     case ORL_RELOC_TYPE_JUMP:
-        type = FIX_OFFSET_32 | FIX_REL;
-        break;
+	type = FIX_OFFSET_32 | FIX_REL;
+	break;
     case ORL_RELOC_TYPE_REL_21_SH:
-        type = FIX_OFFSET_21 | FIX_REL | FIX_SHIFT;
-        break;
+	type = FIX_OFFSET_21 | FIX_REL | FIX_SHIFT;
+	break;
     case ORL_RELOC_TYPE_REL_24:
-        type = FIX_OFFSET_24 | FIX_REL;
-        break;
+	type = FIX_OFFSET_24 | FIX_REL;
+	break;
     case ORL_RELOC_TYPE_REL_32:
-        type = FIX_OFFSET_32 | FIX_REL;
-        break;
+	type = FIX_OFFSET_32 | FIX_REL;
+	break;
     case ORL_RELOC_TYPE_REL_32_NOADJ:
-        type = FIX_OFFSET_32 | FIX_REL | FIX_NOADJ;
-        break;
+	type = FIX_OFFSET_32 | FIX_REL | FIX_NOADJ;
+	break;
     case ORL_RELOC_TYPE_SEGMENT:
-        type = FIX_BASE;
-        break;
+	type = FIX_BASE;
+	break;
     case ORL_RELOC_TYPE_WORD_32_NB:
-        type = FIX_OFFSET_32 | FIX_NO_BASE;
-        break;
+	type = FIX_OFFSET_32 | FIX_NO_BASE;
+	break;
     case ORL_RELOC_TYPE_SEC_REL:
-        type = FIX_OFFSET_32 | FIX_SEC_REL;
-        break;
+	type = FIX_OFFSET_32 | FIX_SEC_REL;
+	break;
     case ORL_RELOC_TYPE_SECTION:
-        type = FIX_BASE;
-        break;
+	type = FIX_BASE;
+	break;
     case ORL_RELOC_TYPE_WORD_32:
-        type = FIX_OFFSET_32;
-        if ( FmtData.u.pe.win64 && ( LinkState & MAKE_RELOCS ) && ( FmtData.u.pe.nolargeaddressaware == 0 ) ) {
-            LnkMsg( ERR+MSG_NEED_NOLARGEADDRESSAWARE, "s", ORLSymbolGetName( reloc->symbol ) );
-        }
-        break;
-    case ORL_RELOC_TYPE_GOT_32:     // relative ref to 32-bit offset from TOC base.
-        type = FIX_OFFSET_32 | FIX_TOC;
-        break;
+	type = FIX_OFFSET_32;
+	if ( FmtData.u.pe.win64 && ( LinkState & MAKE_RELOCS ) && ( FmtData.u.pe.nolargeaddressaware == 0 ) ) {
+	    LnkMsg( ERR+MSG_NEED_NOLARGEADDRESSAWARE, "s", ORLSymbolGetName( reloc->symbol ) );
+	}
+	break;
+    case ORL_RELOC_TYPE_GOT_32:	    // relative ref to 32-bit offset from TOC base.
+	type = FIX_OFFSET_32 | FIX_TOC;
+	break;
     case ORL_RELOC_TYPE_HALF_HI:
     case ORL_RELOC_TYPE_HALF_HA:
-        SavedReloc = *reloc;
-        skip = TRUE;
-        break;
+	SavedReloc = *reloc;
+	skip = TRUE;
+	break;
     case ORL_RELOC_TYPE_HALF_LO:
-        if( SavedReloc.type == ORL_RELOC_TYPE_NONE ) {    // we recursed
-            type = FIX_OFFSET_16 | FIX_SIGNED;
-        } else {
-            SavedReloc.type = ORL_RELOC_TYPE_NONE;      // flag recursion
-            DoReloc( reloc );
-            reloc = &SavedReloc;
-            type = FIX_HIGH_OFFSET_16;
-        }
-        break;
+	if( SavedReloc.type == ORL_RELOC_TYPE_NONE ) {	  // we recursed
+	    type = FIX_OFFSET_16 | FIX_SIGNED;
+	} else {
+	    SavedReloc.type = ORL_RELOC_TYPE_NONE;	// flag recursion
+	    DoReloc( reloc );
+	    reloc = &SavedReloc;
+	    type = FIX_HIGH_OFFSET_16;
+	}
+	break;
     case ORL_RELOC_TYPE_REL_32_ADJ1: /* jwlink */
     case ORL_RELOC_TYPE_REL_32_ADJ2: // relative ref to a 32-bit address, need special adjustment
     case ORL_RELOC_TYPE_REL_32_ADJ3:
     case ORL_RELOC_TYPE_REL_32_ADJ4:
     case ORL_RELOC_TYPE_REL_32_ADJ5:
-        adjust = reloc->type - ORL_RELOC_TYPE_REL_32_ADJ1 + 1;
-        /* jwlink: store adjustment in upper 4 bits of type */
-        type = FIX_OFFSET_32 | FIX_REL | (adjust << 28);
-        //printf( "32-bit PC-relative fixup %X at %X, adjust=%u\n", reloc->type, reloc->offset, adjust );
-        break;
+	adjust = reloc->type - ORL_RELOC_TYPE_REL_32_ADJ1 + 1;
+	/* jwlink: store adjustment in upper 4 bits of type */
+	type = FIX_OFFSET_32 | FIX_REL | (adjust << 28);
+	//printf( "32-bit PC-relative fixup %X at %X, adjust=%u\n", reloc->type, reloc->offset, adjust );
+	break;
     case ORL_RELOC_TYPE_WORD_64: /* jwlink */
-        type = FIX_OFFSET_64;
-        break;
+	type = FIX_OFFSET_64;
+	break;
     case ORL_RELOC_TYPE_NONE:
     default:
-        printf( "unknown reloc type %X at %s:%X\n", reloc->type, ORLSecGetName( reloc->section ), reloc->offset );
-        LnkMsg( LOC+ERR+MSG_BAD_RELOC_TYPE, NULL );
-        skip = TRUE;
-        break;
+	printf( "unknown reloc type %X at %s:%X\n", reloc->type, ORLSecGetName( reloc->section ), reloc->offset );
+	LnkMsg( LOC+ERR+MSG_BAD_RELOC_TYPE, NULL );
+	skip = TRUE;
+	break;
     }
     if( !skip ) {
-        seg = FindSegNode( reloc->section );
-        DEBUG(( DBG_OLD, "DoReloc(): seg=%s", seg ? seg->entry->u.leader->segname : "NULL" ))
-        addend = 0;
-        if( seg != NULL && !(seg->info & SEG_DEAD) && seg->entry != NULL
-                                                   && !seg->entry->isdead ) {
-            SetCurrSeg( seg->entry, 0, seg->contents );
-            frame.type = FIX_FRAME_TARG;
-            ext = FindExtHandle( reloc->symbol );
-            if( ext == NULL ) {
-                symseg = FindSegNode( ORLSymbolGetSecHandle(reloc->symbol) );
-                if( symseg != NULL && !(seg->info & SEG_DEAD) ) {
-                    addend = ORLSymbolGetValue( reloc->symbol );
-                    targ.u.sdata = symseg->entry;
-                    targ.type = FIX_FRAME_SEG;
-                    if( istoc ) {
-                        AddSdataOffToToc( symseg->entry, addend );
-                    }
-                } else {
-                    skip = TRUE;
-                }
-            } else {
-                targ.u.sym = ext->entry;
-                targ.type = FIX_FRAME_EXT;
-                if( istoc ) {
-                    AddSymToToc( targ.u.sym );
-                }
-            }
-            if( !skip ) {
-                StoreFixup( reloc->offset, type, &frame, &targ, addend );
-            }
-        }
+	seg = FindSegNode( reloc->section );
+	DEBUG(( DBG_OLD, "DoReloc(): seg=%s", seg ? seg->entry->u.leader->segname : "NULL" ))
+	addend = 0;
+	if( seg != NULL && !(seg->info & SEG_DEAD) && seg->entry != NULL
+						   && !seg->entry->isdead ) {
+	    SetCurrSeg( seg->entry, 0, seg->contents );
+	    frame.type = FIX_FRAME_TARG;
+	    ext = FindExtHandle( reloc->symbol );
+	    if( ext == NULL ) {
+		symseg = FindSegNode( ORLSymbolGetSecHandle(reloc->symbol) );
+		if( symseg != NULL && !(seg->info & SEG_DEAD) ) {
+		    addend = ORLSymbolGetValue( reloc->symbol );
+		    targ.u.sdata = symseg->entry;
+		    targ.type = FIX_FRAME_SEG;
+		    if( istoc ) {
+			AddSdataOffToToc( symseg->entry, addend );
+		    }
+		} else {
+		    skip = TRUE;
+		}
+	    } else {
+		targ.u.sym = ext->entry;
+		targ.type = FIX_FRAME_EXT;
+		if( istoc ) {
+		    AddSymToToc( targ.u.sym );
+		}
+	    }
+	    if( !skip ) {
+		StoreFixup( reloc->offset, type, &frame, &targ, addend );
+	    }
+	}
     }
     return( ORL_OKAY );
 }
@@ -992,21 +1077,21 @@ static void HandleImportSymbol( char *name )
     intname.name = name;
     intname.len = strlen(name);
     if( ImpModName == NULL ) {
-        ImpModName = FileName( CurrMod->name,strlen(CurrMod->name),E_DLL,FALSE);
+	ImpModName = FileName( CurrMod->name,strlen(CurrMod->name),E_DLL,FALSE);
     }
     modname.name = ImpModName;
     modname.len = strlen(ImpModName);
     if( ImpExternalName == NULL ) {
-        if( ImpOrdinal == 0 ) {
-            ImpOrdinal = NOT_IMP_BY_ORDINAL;
-        } else {
-            ImpOrdinal &= 0x7FFFFFFF;           // get rid of that high bit
-        }
-        HandleImport( &intname, &modname, &intname, ImpOrdinal );
+	if( ImpOrdinal == 0 ) {
+	    ImpOrdinal = NOT_IMP_BY_ORDINAL;
+	} else {
+	    ImpOrdinal &= 0x7FFFFFFF;		// get rid of that high bit
+	}
+	HandleImport( &intname, &modname, &intname, ImpOrdinal );
     } else {
-        extname.name = ImpExternalName;
-        extname.len = strlen(ImpExternalName);
-        HandleImport( &intname, &modname, &extname, NOT_IMP_BY_ORDINAL );
+	extname.name = ImpExternalName;
+	extname.len = strlen(ImpExternalName);
+	HandleImport( &intname, &modname, &extname, NOT_IMP_BY_ORDINAL );
     }
     _LnkFree( ImpModName );
     ImpModName = NULL;
@@ -1016,57 +1101,57 @@ static void ScanImported( void )
 /******************************/
 {
     if( CurrMod->modinfo & MOD_IMPORT_LIB ) {
-        if( FirstCodeSymName != NULL ) {
-            HandleImportSymbol( FirstCodeSymName );
-        } else if( FirstDataSymName != NULL ) {
-            HandleImportSymbol( FirstDataSymName );
-        }
+	if( FirstCodeSymName != NULL ) {
+	    HandleImportSymbol( FirstCodeSymName );
+	} else if( FirstDataSymName != NULL ) {
+	    HandleImportSymbol( FirstDataSymName );
+	}
     }
 }
 
 static orl_sec_return_func SegmentJumpTable[] = {
-    NullFunc,           // ORL_SEC_TYPE_NONE
-    DeclareSegment,     // ORL_SEC_TYPE_NO_BITS (bss)
-    DeclareSegment,     // ORL_SEC_TYPE_PROG_BITS
-    NullFunc,           // ORL_SEC_TYPE_SYM_TABLE
-    NullFunc,           // ORL_SEC_TYPE_DYN_SYM_TABLE
-    NullFunc,           // ORL_SEC_TYPE_STR_TABLE
-    NullFunc,           // ORL_SEC_TYPE_RELOCS
-    NullFunc,           // ORL_SEC_TYPE_RELOCS_EXPAND
-    NullFunc,           // ORL_SEC_TYPE_HASH
-    NullFunc,           // ORL_SEC_TYPE_DYNAMIC
-    NullFunc,           // ORL_SEC_TYPE_NOTE
-    NullFunc,           // ORL_SEC_TYPE_LINK_INFO
+    NullFunc,		// ORL_SEC_TYPE_NONE
+    DeclareSegment,	// ORL_SEC_TYPE_NO_BITS (bss)
+    DeclareSegment,	// ORL_SEC_TYPE_PROG_BITS
+    NullFunc,		// ORL_SEC_TYPE_SYM_TABLE
+    NullFunc,		// ORL_SEC_TYPE_DYN_SYM_TABLE
+    NullFunc,		// ORL_SEC_TYPE_STR_TABLE
+    NullFunc,		// ORL_SEC_TYPE_RELOCS
+    NullFunc,		// ORL_SEC_TYPE_RELOCS_EXPAND
+    NullFunc,		// ORL_SEC_TYPE_HASH
+    NullFunc,		// ORL_SEC_TYPE_DYNAMIC
+    NullFunc,		// ORL_SEC_TYPE_NOTE
+    NullFunc,		// ORL_SEC_TYPE_LINK_INFO
 };
 
 static orl_sec_return_func SymbolJumpTable[] = {
-    NullFunc,           // ORL_SEC_TYPE_NONE
-    NullFunc,           // ORL_SEC_TYPE_NO_BITS (bss)
-    NullFunc,           // ORL_SEC_TYPE_PROG_BITS
-    SymTable,           // ORL_SEC_TYPE_SYM_TABLE
-    NullFunc,           // ORL_SEC_TYPE_DYN_SYM_TABLE
-    NullFunc,           // ORL_SEC_TYPE_STR_TABLE
-    NullFunc,           // ORL_SEC_TYPE_RELOCS
-    NullFunc,           // ORL_SEC_TYPE_RELOCS_EXPAND
-    NullFunc,           // ORL_SEC_TYPE_HASH
-    NullFunc,           // ORL_SEC_TYPE_DYNAMIC
-    NullFunc,           // ORL_SEC_TYPE_NOTE
-    NullFunc            // ORL_SEC_TYPE_LINK_INFO
+    NullFunc,		// ORL_SEC_TYPE_NONE
+    NullFunc,		// ORL_SEC_TYPE_NO_BITS (bss)
+    NullFunc,		// ORL_SEC_TYPE_PROG_BITS
+    SymTable,		// ORL_SEC_TYPE_SYM_TABLE
+    NullFunc,		// ORL_SEC_TYPE_DYN_SYM_TABLE
+    NullFunc,		// ORL_SEC_TYPE_STR_TABLE
+    NullFunc,		// ORL_SEC_TYPE_RELOCS
+    NullFunc,		// ORL_SEC_TYPE_RELOCS_EXPAND
+    NullFunc,		// ORL_SEC_TYPE_HASH
+    NullFunc,		// ORL_SEC_TYPE_DYNAMIC
+    NullFunc,		// ORL_SEC_TYPE_NOTE
+    NullFunc		// ORL_SEC_TYPE_LINK_INFO
 };
 
 static orl_sec_return_func P1SpecificJumpTable[] = {
-    NullFunc,           // ORL_SEC_TYPE_NONE
-    NullFunc,           // ORL_SEC_TYPE_NO_BITS (bss)
-    NullFunc,           // ORL_SEC_TYPE_PROG_BITS
-    NullFunc,           // ORL_SEC_TYPE_SYM_TABLE
-    Unsupported,        // ORL_SEC_TYPE_DYN_SYM_TABLE
-    NullFunc,           // ORL_SEC_TYPE_STR_TABLE
-    P1Relocs,           // ORL_SEC_TYPE_RELOCS
-    P1Relocs,           // ORL_SEC_TYPE_RELOCS_EXPAND
-    NullFunc,           // ORL_SEC_TYPE_HASH
-    Unsupported,        // ORL_SEC_TYPE_DYNAMIC
-    P1Note,             // ORL_SEC_TYPE_NOTE
-    NullFunc            // ORL_SEC_TYPE_LINK_INFO
+    NullFunc,		// ORL_SEC_TYPE_NONE
+    NullFunc,		// ORL_SEC_TYPE_NO_BITS (bss)
+    NullFunc,		// ORL_SEC_TYPE_PROG_BITS
+    NullFunc,		// ORL_SEC_TYPE_SYM_TABLE
+    Unsupported,	// ORL_SEC_TYPE_DYN_SYM_TABLE
+    NullFunc,		// ORL_SEC_TYPE_STR_TABLE
+    P1Relocs,		// ORL_SEC_TYPE_RELOCS
+    P1Relocs,		// ORL_SEC_TYPE_RELOCS_EXPAND
+    NullFunc,		// ORL_SEC_TYPE_HASH
+    Unsupported,	// ORL_SEC_TYPE_DYNAMIC
+    P1Note,		// ORL_SEC_TYPE_NOTE
+    NullFunc		// ORL_SEC_TYPE_LINK_INFO
 };
 
 static orl_return ProcSegments( orl_sec_handle hdl )
@@ -1091,7 +1176,7 @@ unsigned long ORLPass1( void )
 /***********************************/
 // do pass 1 for an object file handled by ORL.
 {
-    orl_file_handle     filehdl;
+    orl_file_handle	filehdl;
 
     /* jwlink: why setting dosseg? */
     //LinkState |= DOSSEG_FLAG;
@@ -1100,25 +1185,25 @@ unsigned long ORLPass1( void )
     PermStartMod( CurrMod );
     filehdl = InitFile();
     if( filehdl == NULL ) {
-        LnkMsg( FTL+MSG_BAD_OBJECT, "s", CurrMod->f.source->file->name );
-        CurrMod->f.source->file->flags |= INSTAT_IOERR;
-        return( -1 );
+	LnkMsg( FTL+MSG_BAD_OBJECT, "s", CurrMod->f.source->file->name );
+	CurrMod->f.source->file->flags |= INSTAT_IOERR;
+	return( -1 );
     }
     if( CheckFlags( filehdl ) ) {
-        if( LinkState & HAVE_PPC_CODE && !FmtData.toc_initialized ) {
-            InitToc();
-            FmtData.toc_initialized = 1;
-        }
-        if( LinkFlags & DWARF_DBI_FLAG ) {
-            CurrMod->modinfo |= MOD_FLATTEN_DBI;
-        }
-        CurrMod->modinfo |= MOD_NEED_PASS_2;
-        ORLFileScan( filehdl, NULL, ProcSegments );
-        IterateNodelist( SegNodes, AllocSeg, NULL );
-        ORLFileScan( filehdl, NULL, ProcSymbols );
-        ScanImported();
-        ORLFileScan( filehdl, NULL, ProcP1Specific );
-        IterateNodelist( SegNodes, DefNosymComdats, NULL );
+	if( LinkState & HAVE_PPC_CODE && !FmtData.toc_initialized ) {
+	    InitToc();
+	    FmtData.toc_initialized = 1;
+	}
+	if( LinkFlags & DWARF_DBI_FLAG ) {
+	    CurrMod->modinfo |= MOD_FLATTEN_DBI;
+	}
+	CurrMod->modinfo |= MOD_NEED_PASS_2;
+	ORLFileScan( filehdl, NULL, ProcSegments );
+	IterateNodelist( SegNodes, AllocSeg, NULL );
+	ORLFileScan( filehdl, NULL, ProcSymbols );
+	ScanImported();
+	ORLFileScan( filehdl, NULL, ProcP1Specific );
+	IterateNodelist( SegNodes, DefNosymComdats, NULL );
     }
     FiniFile( filehdl, CurrMod->f.source );
     return( ORLSeek( CurrMod->f.source, 0, SEEK_CUR ) );
