@@ -355,6 +355,8 @@ static orl_reloc_type convertAMD64Reloc( elf_reloc_type elf_type )
     case R_X86_64_64:
         return( ORL_RELOC_TYPE_WORD_64 );
     case R_X86_64_PC32:
+        /* added for LINKW */
+        return( ORL_RELOC_TYPE_REL_32 );
     case R_X86_64_GOTPC32:
         return( ORL_RELOC_TYPE_REL_32_NOADJ );
     default:

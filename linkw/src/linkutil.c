@@ -570,11 +570,11 @@ f_handle SearchPath( char *name )
             }
         }
     }
-    if ( !strcmp( name, "linkw.lnk" ) ) { /* Added v2.01 */
+    if ( !strcmp( name, "linkw.cfg" ) ) { /* Added v2.01 */
         strcpy(fullpath, __argv[0] );
         path = strrchr( fullpath, '.' );
         if ( path ) {
-            strcpy( path, ".lnk" );
+            strcpy( path, ".cfg" );
             file = QObjOpen( fullpath );
             if( file != NIL_HANDLE ) {
                 return( file );

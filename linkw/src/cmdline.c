@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  Command line parser.
+* Description:	Command line parser.
 *
 ****************************************************************************/
 
@@ -80,7 +80,7 @@ static bool		ProcRawHelp( void );
 static void		WriteHelp( unsigned first_ln, unsigned last_ln, bool prompt );
 static void		GetExtraCommands( void );
 
-static  parse_entry   FormatHelp[] = {
+static	parse_entry   FormatHelp[] = {
     "Dos",	    ProcDosHelp,	    MK_ALL,	0,
 #ifdef _OS2
     "OS2",	    ProcOS2Help,	    MK_ALL,	0,
@@ -122,9 +122,9 @@ static sysblock		*PrevCommand;
 //#define INIT_FILE_NAME  "wlink.lnk"
 //#define INIT_FILE_ENV	  "WLINK_LNK"
 //#define INIT_FILE_NAME  "jwlink.lnk"
-//#define INIT_FILE_ENV  "JWLINK_LNK"
-#define INIT_FILE_NAME  "linkw.lnk"
-#define INIT_FILE_ENV	"LINKW_LNK"
+//#define INIT_FILE_ENV	 "JWLINK_LNK"
+#define INIT_FILE_NAME	"linkw.cfg"
+#define INIT_FILE_ENV	"LINKW_CFG"
 
 void InitCmdFile( void )
 /******************************/
@@ -167,7 +167,7 @@ void DoCmdFile( char *fname )
 /**********************************/
 /* start parsing the command */
 {
-    exe_format  possible;
+    exe_format	possible;
     f_handle	file;
     size_t	namelen;
     file_defext extension;
@@ -175,7 +175,7 @@ void DoCmdFile( char *fname )
 
     ResetCmdFile();
     if( fname == NULL || *fname == '\0' ) {
-	_ChkAlloc( fname, (10*1024) );  // arbitrarily large buffer that won't
+	_ChkAlloc( fname, (10*1024) );	// arbitrarily large buffer that won't
 	GetCmdLine( fname );		// be overflowed
 	NewCommandSource( NULL, fname, COMMANDLINE );
     } else {
@@ -776,8 +776,8 @@ bool HintFormat( exe_format hint )
 void DecideFormat( void )
 /******************************/
 {
-    exe_format  possible;
-    exe_format  allowed;
+    exe_format	possible;
+    exe_format	allowed;
     char	rc_buff[RESOURCE_MAX_SIZE];
 
     if( !(LinkState & FMT_DECIDED) ) {

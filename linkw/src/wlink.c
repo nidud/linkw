@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  Mainline for Open Watcom linker.
+* Description:	Mainline for Open Watcom linker.
 *
 ****************************************************************************/
 
@@ -387,6 +387,8 @@ static void DoDefaultSystem( void )
 	    }
 	    if( LinkState & FMT_SEEN_32_BIT ) {
 		ExecSystem( "386" );
+	    } else if ( LinkState & FMT_SEEN_64_BIT ) {
+		ExecSystem( "x64" );
 	    } else {
 		ExecSystem( "286" ); /* no 386 obj's after this */
 	    }

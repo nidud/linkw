@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  Utilities for wlink specific parts of objpass2.
+* Description:	Utilities for wlink specific parts of objpass2.
 *
 ****************************************************************************/
 
@@ -75,7 +75,7 @@ typedef struct fix_data {
     unsigned	os2_selfrel : 1;
 } fix_data;
 
-static offset		LastOptimized;  // offset last optimized.
+static offset		LastOptimized;	// offset last optimized.
 static fix_type		LastOptType;
 static segdata *	LastSegData;
 static offset		FixupOverflow;
@@ -176,7 +176,7 @@ static unsigned CalcFixupSize( fix_type type )
     unsigned value;
 
     value = OffsetSizes[ FIX_GET_OFFSET( type ) ];
-    if( type &  FIX_BASE ) {
+    if( type &	FIX_BASE ) {
 	value += sizeof( unsigned_16 );
     }
     return( value );
@@ -400,7 +400,7 @@ static void BuildReloc( save_fixup *save, frame_spec *targ, frame_spec *frame )
     }
     if( FmtData.type & MK_OVERLAYS ) {
 	if( ( targ->type == FIX_FRAME_EXT )
-	    && ( (fix.type & FIX_REL) == 0 || FmtData.u.dos.ovl_short ) 
+	    && ( (fix.type & FIX_REL) == 0 || FmtData.u.dos.ovl_short )
 	    && targ->u.sym->u.d.ovlref
 	    && ( (targ->u.sym->u.d.ovlstate & OVL_VEC_MASK) == OVL_MAKE_VECTOR ) ) {
 	    // redirect target to appropriate vector entry
@@ -429,8 +429,8 @@ unsigned IncExecRelocs( void *_save )
 {
     save_fixup *save = _save;
     segdata *	sdata;
-    frame_spec  targ;
-    frame_spec  frame;
+    frame_spec	targ;
+    frame_spec	frame;
 
     if( save->flags & FIX_CHANGE_SEG ) {
 	sdata = (segdata *)( save->flags & ~FIX_CHANGE_SEG );
@@ -484,7 +484,7 @@ unsigned RelocMarkSyms( void *_fix )
 {
     save_fixup *fix = _fix;
     segdata *	sdata;
-    frame_type  frame;
+    frame_type	frame;
     symbol *	sym;
 
     if( fix->flags & FIX_CHANGE_SEG ) {
@@ -524,10 +524,10 @@ void StoreFixup( offset off, fix_type type, frame_spec *frame,
 			frame_spec *targ, offset addend )
 /*******************************************************************/
 {
-    save_fixup  save;
+    save_fixup	save;
     fix_data	fix;
     unsigned	size;
-    unsigned_8  buff[2 * sizeof( unsigned_32 )];
+    unsigned_8	buff[2 * sizeof( unsigned_32 )];
 
 	DEBUG(( DBG_OLD, "obj2supp.StoreFixup() enter" ));
     if( LastSegData != CurrRec.seg ) {
@@ -580,7 +580,7 @@ unsigned IncSaveRelocs( void *_save )
 {
     save_fixup *save = _save;
     segdata *	sdata;
-    frame_spec  targ;
+    frame_spec	targ;
     unsigned	fixsize;
     unsigned	datasize;
     char *	data;
@@ -744,7 +744,7 @@ static void PatchOffset( fix_data *fix, unsigned_32 val, bool isdelta )
 static void MakeQNXFloatReloc( fix_data *fix )
 /********************************************/
 {
-    base_reloc  new_reloc;
+    base_reloc	new_reloc;
 
     if( FmtData.u.qnx.gen_seg_relocs ) {
 	InitReloc( &new_reloc );
@@ -819,7 +819,7 @@ static bool CheckSpecials( fix_data *fix, frame_spec *targ )
     signed_32	pos;
     unsigned	fixsize;
     group_entry *group;
-    segdata  *  sdata;
+    segdata  *	sdata;
     fix_type	special;
 
     if( FmtData.type & MK_ELF ) {
@@ -844,6 +844,7 @@ static bool CheckSpecials( fix_data *fix, frame_spec *targ )
     }
     special = fix->type & FIX_SPECIAL_MASK;
     if( ( special == FIX_TOC ) || ( special == FIX_TOCV ) ) {
+
 	if( special == FIX_TOCV ) {
 	    DbgAssert( targ->type == FIX_FRAME_EXT );
 	    pos = FindSymPosInTocv( targ->u.sym );
@@ -944,12 +945,14 @@ static bool CheckSpecials( fix_data *fix, frame_spec *targ )
 	    off -= FindGroup( fix->loc_addr.seg )->linear;
 	}
     } else if( !(FmtData.type & MK_DOS16M) ) {
+
 	off = SUB_ADDR( fix->tgt_addr, fix->loc_addr );
 #ifdef _DOS16M
     } else {
 	off = SUB_16M_ADDR( fix->tgt_addr, fix->loc_addr );
 #endif
     }
+
     fixsize = CalcFixupSize( fix->type );
     if ( !( fix->type & FIX_NOADJ ) ) {
 	off -= fixsize;
@@ -1405,7 +1408,7 @@ static void FmtReloc( fix_data *fix, frame_spec *tthread )
 		    break;
 		}
 	    case 3:	// 16:16 pointer	   NOTE the fall through
-		fixtype |= OSF_FIXUP_TO_ALIAS;  // YET more fall through
+		fixtype |= OSF_FIXUP_TO_ALIAS;	// YET more fall through
 	    case 5:	// 16-bit offset
 		for( grp = Groups; grp != NULL; grp = grp->next_group ) {
 		    if( grp->grp_addr.seg == targ.seg ) {
@@ -1564,21 +1567,21 @@ static void FmtReloc( fix_data *fix, frame_spec *tthread )
 	symbol *sym;
 
 	if( LinkState & HAVE_I86_CODE ) {
-			if ( FmtData.u.elf.elf64 ) {
-				if( fix->type & FIX_REL ) {
-					new_reloc.item.elf64.info = R_X86_64_PC32;
-				} else if ( ftype == FIX_OFFSET_64 ) {
-					new_reloc.item.elf64.info = R_X86_64_64;
-				} else {
-					new_reloc.item.elf64.info = R_X86_64_32;
-				}
-			} else {
-				if( fix->type & FIX_REL ) {
-					new_reloc.item.elf32.info = R_386_PC32;
-				} else {
-					new_reloc.item.elf32.info = R_386_32;
-				}
-			}
+	    if ( FmtData.u.elf.elf64 ) {
+		if( fix->type & FIX_REL ) {
+		    new_reloc.item.elf64.info = R_X86_64_PC32;
+		} else if ( ftype == FIX_OFFSET_64 ) {
+		    new_reloc.item.elf64.info = R_X86_64_64;
+		} else {
+		    new_reloc.item.elf64.info = R_X86_64_32;
+		}
+	    } else {
+		if( fix->type & FIX_REL ) {
+		    new_reloc.item.elf32.info = R_386_PC32;
+		} else {
+		    new_reloc.item.elf32.info = R_386_32;
+		}
+	    }
 	} else if( LinkState & HAVE_PPC_CODE ) {
 	    if( fix->type & FIX_HIGH ) {
 		new_reloc.item.elf32.info = R_PPC_ADDR16_HI;
@@ -1614,10 +1617,10 @@ static void FmtReloc( fix_data *fix, frame_spec *tthread )
 	if( IS_SYM_ALIAS( sym ) && ( sym->info & SYM_WAS_LAZY ) ) {
 	    save = FALSE;
 	} else if( ( tthread->type & FIX_FRAME_EXT ) && IsSymElfImpExp( sym ) ) {
-			if ( FmtData.u.elf.elf64 )
-				new_reloc.item.elf64.addend = 0;
-			else
-				new_reloc.item.elf32.addend = 0;
+	    if ( FmtData.u.elf.elf64 )
+		new_reloc.item.elf64.addend = 0;
+	    else
+		new_reloc.item.elf32.addend = 0;
 	} else {
 	    seg = GetFrameSegData( tthread );
 	    if( seg == NULL ) {
@@ -1625,25 +1628,24 @@ static void FmtReloc( fix_data *fix, frame_spec *tthread )
 	    } else {
 		grp = seg->u.leader->group;
 		sym = grp->sym;
-				if ( FmtData.u.elf.elf64 )
-					new_reloc.item.elf64.addend = targ.off - grp->grp_addr.off;
-				else
-					new_reloc.item.elf32.addend = targ.off - grp->grp_addr.off;
+		if ( FmtData.u.elf.elf64 )
+		    new_reloc.item.elf64.addend = targ.off - grp->grp_addr.off;
+		else
+		    new_reloc.item.elf32.addend = targ.off - grp->grp_addr.off;
 	    }
 	}
 	if( save ) {
-			if ( FmtData.u.elf.elf64 ) {
+	    if ( FmtData.u.elf.elf64 ) {
 #ifdef __WATCOM__
-				new_reloc.item.elf64.info |= (unsigned long long)FindElfSymIdx( sym ) << 32;
+		new_reloc.item.elf64.info |= (unsigned long long)FindElfSymIdx( sym ) << 32;
 #else
-				new_reloc.item.elf64.info |= (unsigned __int64)FindElfSymIdx( sym ) << 32;
+		new_reloc.item.elf64.info |= (unsigned __int64)FindElfSymIdx( sym ) << 32;
 #endif
-
-				new_reloc.item.elf64.reloc_offset = off;
-			} else {
-				new_reloc.item.elf32.info |= FindElfSymIdx( sym ) << 8;
-				new_reloc.item.elf32.reloc_offset = off;
-			}
+		new_reloc.item.elf64.reloc_offset = off;
+	    } else {
+		new_reloc.item.elf32.info |= FindElfSymIdx( sym ) << 8;
+		new_reloc.item.elf32.reloc_offset = off;
+	    }
 	}
     } else if( FmtData.type & MK_PHAR_REX ) {
 	if( ftype == FIX_OFFSET_32 ) {
@@ -1678,7 +1680,7 @@ static void Relocate( save_fixup *save, fix_data *fix, frame_spec *targ )
 {
     int		shift;
     unsigned	datasize;
-    unsigned_8  addbuf[MAX_ADDEND_SIZE + 2];
+    unsigned_8	addbuf[MAX_ADDEND_SIZE + 2];
 
 	DEBUG(( DBG_OLD, "Relocate() enter" ))
     shift = 0;
