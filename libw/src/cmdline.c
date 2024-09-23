@@ -1,6 +1,6 @@
 /****************************************************************************
 *
-*			     Open Watcom Project
+*                            Open Watcom Project
 *
 *    Portions Copyright (c) 1983-2002 Sybase, Inc. All Rights Reserved.
 *
@@ -38,8 +38,8 @@
 
 #define my_tolower( c ) tolower( (unsigned char)(c) )
 
-options_def	Options;
-lib_cmd		*CmdList;
+options_def     Options;
+lib_cmd         *CmdList;
 
 static lib_cmd  **CmdListEnd;
 
@@ -49,27 +49,27 @@ static char *GetString( char *c, char *buff, bool singlequote, bool ignoreSpaceI
 
     eatwhite(c);
     if( (*c == '\"') || ( singlequote && (*c == '\'') ) ) {
-	quote = *c;
-	c++;
-	while( (*c != '\0') && (*c != quote) ) {
-	    *buff++ = *c++;
-	}
-	if( *c == quote ) {
-	    c++;
-	}
+        quote = *c;
+        c++;
+        while( (*c != '\0') && (*c != quote) ) {
+            *buff++ = *c++;
+        }
+        if( *c == quote ) {
+            c++;
+        }
     } else {
-	int inquote = FALSE;
+        int inquote = FALSE;
 
-	while( inquote || notwhite( *c ) ) {
-	    if( ignoreSpaceInQuotes ) {
-		if( *c == '\0' ) {
-		    break;
-		} else if( (*c == '\"') || (*c == '\'') ) {
-		    inquote = !inquote;
-		}
-	    }
-	    *buff++ = *c++;
-	}
+        while( inquote || notwhite( *c ) ) {
+            if( ignoreSpaceInQuotes ) {
+                if( *c == '\0' ) {
+                    break;
+                } else if( (*c == '\"') || (*c == '\'') ) {
+                    inquote = !inquote;
+                }
+            }
+            *buff++ = *c++;
+        }
     }
     *buff = '\0';
     return( c );
@@ -80,20 +80,20 @@ static char *GetEqual( char *c, char *buff, char *ext, char **ret )
     char    *start = c;
 
     eatwhite( c );
-    if( *c == '=' ) {
-	++c;
-	eatwhite( c );
+    if( *c == '=' || *c == ':' ) {
+        ++c;
+        eatwhite( c );
     } else {
-	c = start;
+        c = start;
     }
     if( *c == ' ' || *c == '\0' ) {
-	*ret = NULL;
+        *ret = NULL;
     } else {
-	c = GetString( c, buff, FALSE, FALSE );
-	if( ext != NULL ) {
-	    DefaultExtension( buff, ext );
-	}
-	*ret = DupStr( buff );
+        c = GetString( c, buff, FALSE, FALSE );
+        if( ext != NULL ) {
+            DefaultExtension( buff, ext );
+        }
+        *ret = DupStr( buff );
     }
     return( c );
 }
@@ -104,12 +104,12 @@ static void SetPageSize( unsigned short new_size )
 
     Options.page_size = MIN_PAGE_SIZE;
     for( i = 4; i < 16; i++ ) {
-	if( new_size & (1 << i) ) {
-	    Options.page_size = 1 << i;
-	}
+        if( new_size & (1 << i) ) {
+            Options.page_size = 1 << i;
+        }
     }
     if( Options.page_size < new_size ) {
-	Options.page_size <<= 1;
+        Options.page_size <<= 1;
     }
 }
 
@@ -120,269 +120,311 @@ static void DuplicateOption( char *c )
 
 static char *ParseOption( char *c, char *buff )
 {
-    long	    page_size;
-    char	    *start;
-    char	    *page;
-    char	    *endptr;
-    ar_format	    libformat;
+    long            page_size;
+    char            *start;
+    char            *page;
+    char            *endptr;
+    ar_format       libformat;
 
     start = c++;
     DEBUG(("wlib.ParseOption: %s\n", c));
     eatwhite( c );
     switch( my_tolower( *c++ ) ) {
     case '?':
-	Banner();
-	Usage();
-	break;
-    case 'b': //		       (don't create .bak file)
-	Options.no_backup = 1;
-	break;
-    case 'c': //		       (case sensitive)
-	Options.respect_case = 1;
-	break;
+        Banner();
+        Usage();
+        break;
+    case 'b': //                       (don't create .bak file)
+        Options.no_backup = 1;
+        break;
+    case 'c': //                       (case sensitive)
+        Options.respect_case = 1;
+        break;
     case 'd': // = <object_output_directory>
-	if( Options.output_directory ) {
-	    DuplicateOption( start );
-	}
-	c = GetEqual( c, buff, NULL, &Options.output_directory );
-	if( access( Options.output_directory, F_OK ) != 0 ) {
-	    FatalError( ERR_DIR_NOT_EXIST, Options.output_directory );
-	}
-	break;
+        if ( my_tolower( *c ) == 'e' ) {
+            c = GetEqual( c+2, buff, NULL, &Options.def_file );
+        } else {
+            if( Options.output_directory ) {
+                DuplicateOption( start );
+            }
+            c = GetEqual( c, buff, NULL, &Options.output_directory );
+            if( access( Options.output_directory, F_OK ) != 0 ) {
+                FatalError( ERR_DIR_NOT_EXIST, Options.output_directory );
+            }
+        }
+        break;
     case 'i':
-	switch( my_tolower( *c++ ) ) {
-	case 'n':
-	    switch( my_tolower( *c++ ) ) {
-	    case 'n':
-		Options.nr_ordinal = FALSE;
-		break;
-	    case 'o':
-		Options.nr_ordinal = TRUE;
-		break;
-	    default:
-		c = start;
-		break;
-	    }
-	    break;
-	case 'r':
-	    switch( my_tolower( *c++ ) ) {
-	    case 'n':
-		Options.r_ordinal = FALSE;
-		break;
-	    case 'o':
-		Options.r_ordinal = TRUE;
-		break;
-	    default:
-		c = start;
-		break;
-	    }
-	    break;
-	case 'a':
-	    if( Options.processor != WL_PROC_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.processor = WL_PROC_AXP;
-	    break;
-	case 'p':
-	    if( Options.processor != WL_PROC_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.processor = WL_PROC_PPC;
-	    break;
-	case 'i':
-	    if( Options.processor != WL_PROC_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.processor = WL_PROC_X86;
-	    break;
-	case '6': /* jwlink */
-	    if( Options.processor != WL_PROC_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.processor = WL_PROC_AMD64;
-	    break;
-	case 'e':
-	    if( Options.filetype != WL_FTYPE_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.filetype = WL_FTYPE_ELF;
-	    break;
-	case 'c':
-	    if( Options.filetype != WL_FTYPE_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.filetype = WL_FTYPE_COFF;
-	    break;
-	case 'o':
-	    if( Options.filetype != WL_FTYPE_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.filetype = WL_FTYPE_OMF;
-	    break;
-	default:
-	    c = start;
-	    break;
-	}
-	break;
+        switch( my_tolower( *c++ ) ) {
+        case 'n':
+            switch( my_tolower( *c++ ) ) {
+            case 'n':
+                Options.nr_ordinal = FALSE;
+                break;
+            case 'o':
+                Options.nr_ordinal = TRUE;
+                break;
+            default:
+                c = start;
+                break;
+            }
+            break;
+        case 'r':
+            switch( my_tolower( *c++ ) ) {
+            case 'n':
+                Options.r_ordinal = FALSE;
+                break;
+            case 'o':
+                Options.r_ordinal = TRUE;
+                break;
+            default:
+                c = start;
+                break;
+            }
+            break;
+        case 'a':
+            if( Options.processor != WL_PROC_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.processor = WL_PROC_AXP;
+            break;
+        case 'p':
+            if( Options.processor != WL_PROC_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.processor = WL_PROC_PPC;
+            break;
+        case 'i':
+            if( Options.processor != WL_PROC_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.processor = WL_PROC_X86;
+            break;
+        case '6': /* jwlink */
+            if( Options.processor != WL_PROC_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.processor = WL_PROC_AMD64;
+            break;
+        case 'e':
+            if( Options.filetype != WL_FTYPE_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.filetype = WL_FTYPE_ELF;
+            break;
+        case 'c':
+            if( Options.filetype != WL_FTYPE_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.filetype = WL_FTYPE_COFF;
+            break;
+        case 'o':
+            if( Options.filetype != WL_FTYPE_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.filetype = WL_FTYPE_OMF;
+            break;
+        default:
+            c = start;
+            break;
+        }
+        break;
     case 'h':
-	Banner();
-	Usage();
-	break;
+        Banner();
+        Usage();
+        break;
     case 'l': // [ = <list_file_name> ]
-	if( Options.list_contents ) {
-	    DuplicateOption( start );
-	}
-	Options.list_contents = 1;
-	c = GetEqual( c, buff, EXT_LST, &Options.list_file );
-	break;
-    case 'm': //		       (display C++ mangled names)
-	Options.mangled = 1;
-	break;
+        if ( memicmp( c, "IST", 3 ) == 0 )
+            c += 3;
+        if( Options.list_contents )
+            DuplicateOption( start );
+        Options.list_contents = 1;
+        c = GetEqual( c, buff, EXT_LST, &Options.list_file );
+        break;
+    case 'm': //                       (display C++ mangled names)
+        if ( memicmp( c, "ACHINE", 6 ) == 0 ) {
+            c += 6;
+            eatwhite( c );
+            if ( *c == ':' ) {
+                ++c;
+                eatwhite( c );
+                if ( memicmp( c, "X86", 3 ) == 0 ) {
+                    if ( Options.processor != WL_PROC_NONE )
+                        DuplicateOption( start );
+                    Options.processor = WL_PROC_X86;
+                    c += 3;
+                    break;
+                } else if ( memicmp( c, "X64", 3 ) == 0 ) {
+                    if ( Options.processor != WL_PROC_NONE )
+                        DuplicateOption( start );
+                    Options.processor = WL_PROC_AMD64;
+                    c += 3;
+                    break;
+                }
+            }
+            c = start;
+        } else {
+            Options.mangled = 1;
+        }
+        break;
     case 'o': // = <out_library_name>
-	if( Options.output_name ) {
-	    DuplicateOption( start );
-	}
-	c = GetEqual( c, buff, EXT_LIB, &Options.output_name );
-	break;
-    case 'q': //		       (don't print header)
-	Options.quiet = 1;
-	break;
-    case 'v': //		       (don't print header)
-	Options.quiet = 0;
-	break;
-    case 'x': //		       (explode all objects in library)
-	Options.explode = 1;
-	c = GetEqual( c, buff, NULL, &Options.explode_ext );
-	if( Options.explode_ext == NULL )
-	    Options.explode_ext = EXT_OBJ;
-	break;
+        if ( memicmp( c, "UT", 2 ) == 0 ) {
+            c = GetEqual( c+2, buff, EXT_LIB, &Options.input_name );
+            Options.new_library = 1;
+            Options.no_backup = 1;
+            if( Options.libtype != WL_LTYPE_NONE )
+                DuplicateOption( start );
+            Options.ar_libformat = AR_FMT_COFF;
+            Options.libtype = WL_LTYPE_AR;
+            Options.coff_found = 1;
+        } else {
+            if( Options.output_name )
+                DuplicateOption( start );
+            c = GetEqual( c, buff, EXT_LIB, &Options.output_name );
+        }
+        break;
+    case 'q': //                       (don't print header)
+        Options.quiet = 1;
+        break;
+    case 'v': //                       (don't print header)
+        Options.quiet = 0;
+        break;
+    case 'x': //                       (explode all objects in library)
+        Options.explode = 1;
+        c = GetEqual( c, buff, NULL, &Options.explode_ext );
+        if( Options.explode_ext == NULL )
+            Options.explode_ext = EXT_OBJ;
+        break;
     case 'z':
-	if( ( my_tolower( *c ) == 'l' ) && ( my_tolower( *(c + 1) ) == 'd' ) ) {
-	    c += 2;
-	    if( Options.strip_dependency ) {
-		DuplicateOption( start );
-	    }
-	    Options.strip_dependency = 1; //(strip dependency info)
-	    break;
-	} else if( ( my_tolower( *c ) == 'l' ) && ( my_tolower( *(c + 1) ) == 'l' ) ) {
-	    c += 2;
-	    if( Options.strip_library ) {
-		DuplicateOption( start );
-	    }
-	    Options.strip_library = 1;  //(strip library info)
-	    break;
-	} else if( Options.strip_expdef ) {
-	    DuplicateOption( start );
-	}
-	Options.strip_expdef = 1;	// JBS 99/07/09
-	c = GetEqual( c, buff, NULL, &Options.export_list_file );
-	break;
+        if( ( my_tolower( *c ) == 'l' ) && ( my_tolower( *(c + 1) ) == 'd' ) ) {
+            c += 2;
+            if( Options.strip_dependency ) {
+                DuplicateOption( start );
+            }
+            Options.strip_dependency = 1; //(strip dependency info)
+            break;
+        } else if( ( my_tolower( *c ) == 'l' ) && ( my_tolower( *(c + 1) ) == 'l' ) ) {
+            c += 2;
+            if( Options.strip_library ) {
+                DuplicateOption( start );
+            }
+            Options.strip_library = 1;  //(strip library info)
+            break;
+        } else if( Options.strip_expdef ) {
+            DuplicateOption( start );
+        }
+        Options.strip_expdef = 1;       // JBS 99/07/09
+        c = GetEqual( c, buff, NULL, &Options.export_list_file );
+        break;
     case 't':
-	if( my_tolower( *c ) == 'l' ) {
-	    ++c;
-	    Options.list_contents = 1;
-	    Options.terse_listing = 1; // (internal terse listing option)
-	} else {
-	    Options.trim_path = 1; //(trim THEADR pathnames)
-	}
-	break;
+        if( my_tolower( *c ) == 'l' ) {
+            ++c;
+            Options.list_contents = 1;
+            Options.terse_listing = 1; // (internal terse listing option)
+        } else {
+            Options.trim_path = 1; //(trim THEADR pathnames)
+        }
+        break;
     case 'f':
-	switch( my_tolower( *c++ ) ) {
-	case 'm':
-	    if( Options.libtype != WL_LTYPE_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.libtype = WL_LTYPE_MLIB;
-	    Options.elf_found = 1;
-	    break;
-	case 'a':
-	    switch( my_tolower( *c++ ) ) {
-	    case 'b':
-		libformat = AR_FMT_BSD;
-		break;
-	    case 'c':
-		libformat = AR_FMT_COFF;
-		break;
-	    case 'g':
-		libformat = AR_FMT_GNU;
-		break;
-	    default:
-		--c;
-		libformat = AR_FMT_NONE;
-		break;
-	    }
-	    if( Options.libtype != WL_LTYPE_NONE ) {
-		DuplicateOption( start );
-	    } else if( libformat != AR_FMT_NONE ) {
-		Options.ar_libformat = libformat;
-	    }
-	    Options.libtype = WL_LTYPE_AR;
-	    Options.coff_found = 1;
-	    break;
-	case 'o':
-	    if( Options.libtype != WL_LTYPE_NONE ) {
-		DuplicateOption( start );
-	    }
-	    Options.libtype = WL_LTYPE_OMF;
-	    Options.omf_found = 1;
-	    break;
-	default:
-	    c = start;
-	    break;
-	}
-	break;
+        switch( my_tolower( *c++ ) ) {
+        case 'm':
+            if( Options.libtype != WL_LTYPE_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.libtype = WL_LTYPE_MLIB;
+            Options.elf_found = 1;
+            break;
+        case 'a':
+            switch( my_tolower( *c++ ) ) {
+            case 'b':
+                libformat = AR_FMT_BSD;
+                break;
+            case 'c':
+                libformat = AR_FMT_COFF;
+                break;
+            case 'g':
+                libformat = AR_FMT_GNU;
+                break;
+            default:
+                --c;
+                libformat = AR_FMT_NONE;
+                break;
+            }
+            if( Options.libtype != WL_LTYPE_NONE ) {
+                DuplicateOption( start );
+            } else if( libformat != AR_FMT_NONE ) {
+                Options.ar_libformat = libformat;
+            }
+            Options.libtype = WL_LTYPE_AR;
+            Options.coff_found = 1;
+            break;
+        case 'o':
+            if( Options.libtype != WL_LTYPE_NONE ) {
+                DuplicateOption( start );
+            }
+            Options.libtype = WL_LTYPE_OMF;
+            Options.omf_found = 1;
+            break;
+        default:
+            c = start;
+            break;
+        }
+        break;
 // following only used by OMF libary format
     case 'p':
-	if( my_tolower( *c ) == 'a' ) {
-	    c++;
-	    if( Options.page_size ) {
-		DuplicateOption( start );
-	    }
-	    Options.page_size = (unsigned short)-1;
-	} else {
-	    if( Options.page_size ) {
-		DuplicateOption( start );
-	    }
-	    c = GetEqual( c, buff, NULL, &page );
-	    errno = 0;
-	    page_size = strtoul( page, &endptr, 0 );
-	    if( *endptr != '\0' ) {
-		FatalError( ERR_BAD_CMDLINE, start );
-	    } else if( errno == ERANGE || page_size > MAX_PAGE_SIZE ) {
-		FatalError( ERR_PAGE_RANGE );
-	    }
-	    MemFree( page );
-	    SetPageSize( page_size );
-	}
-	break;
-    case 'n': //		       (always create a new library)
-	Options.new_library = 1;
-	break;
+        if( my_tolower( *c ) == 'a' ) {
+            c++;
+            if( Options.page_size ) {
+                DuplicateOption( start );
+            }
+            Options.page_size = (unsigned short)-1;
+        } else {
+            if( Options.page_size ) {
+                DuplicateOption( start );
+            }
+            c = GetEqual( c, buff, NULL, &page );
+            errno = 0;
+            page_size = strtoul( page, &endptr, 0 );
+            if( *endptr != '\0' ) {
+                FatalError( ERR_BAD_CMDLINE, start );
+            } else if( errno == ERANGE || page_size > MAX_PAGE_SIZE ) {
+                FatalError( ERR_PAGE_RANGE );
+            }
+            MemFree( page );
+            SetPageSize( page_size );
+        }
+        break;
+    case 'n': //                       (always create a new library)
+        if ( memicmp( c, "OLOGO", 5 ) == 0 ) {
+            c+=5;
+            Options.quiet = 1;
+        }
+        Options.new_library = 1;
+        break;
     case 's':
-	Options.strip_line = 1;
-	break;
+        Options.strip_line = 1;
+        break;
     default:
-	c = start;
-	break;
+        c = start;
+        break;
     }
     return( c );
 }
 
 static void AddCommand( operation ops, char *name )
 {
-    lib_cmd	    *new;
+    lib_cmd         *new;
 
     new = MemAllocGlobal( sizeof( lib_cmd ) + strlen( name ) );
     strcpy( new->name, name );
     new->fname = NULL;
     if( ops == OP_EXTRACT ) {
-	char	*p;
+        char    *p;
 
-	p = strchr( new->name, '=' );
-	if( p != NULL ) {
-	    *p = '\0';
-	    new->fname = p + 1;
-	}
+        p = strchr( new->name, '=' );
+        if( p != NULL ) {
+            *p = '\0';
+            new->fname = p + 1;
+        }
     }
     new->ops = ops;
     new->next = *CmdListEnd;
@@ -392,75 +434,75 @@ static void AddCommand( operation ops, char *name )
 
 static void FreeCommands( void )
 {
-    lib_cmd	*cmd, *next;
+    lib_cmd     *cmd, *next;
 
     for( cmd = CmdList; cmd != NULL; cmd = next ) {
-	next = cmd->next;
-	MemFreeGlobal( cmd );
+        next = cmd->next;
+        MemFreeGlobal( cmd );
     }
 }
 
 static char *ParseCommand( char *c )
 {
-    int		    doquotes = TRUE;
-    int		    ignoreSpacesInQuotes = FALSE;
-    char	    *start;
-    operation	    ops = 0;
-    //char	  buff[_MAX_PATH];
-    char	    buff[ MAX_IMPORT_STRING ];
+    int             doquotes = TRUE;
+    int             ignoreSpacesInQuotes = FALSE;
+    char            *start;
+    operation       ops = 0;
+    //char        buff[_MAX_PATH];
+    char            buff[ MAX_IMPORT_STRING ];
 
     start = c;
     eatwhite( c );
     switch( *c++ ) {
     case '-':
-	ops = OP_DELETE;
-	switch( *c ) {
-	case '+':
-	    ops |= OP_ADD;
-	    doquotes = FALSE;
-	    ++c;
-	    break;
+        ops = OP_DELETE;
+        switch( *c ) {
+        case '+':
+            ops |= OP_ADD;
+            doquotes = FALSE;
+            ++c;
+            break;
 #if defined(__UNIX__)
-	case ':':
+        case ':':
 #else
-	case '*':
+        case '*':
 #endif
-	    ops |= OP_EXTRACT;
-	    doquotes = FALSE;
-	    ++c;
-	    break;
-	}
-	break;
+            ops |= OP_EXTRACT;
+            doquotes = FALSE;
+            ++c;
+            break;
+        }
+        break;
     case '+':
-	ops = OP_ADD;
-	switch( *c ) {
-	case '-':
-	    ops |= OP_DELETE;
-	    doquotes = FALSE;
-	    ++c;
-	    break;
-	case '+':
-	    ops |= OP_IMPORT;
-	    doquotes = FALSE;
-	    ignoreSpacesInQuotes = TRUE;
-	    ++c;
-	    break;
-	}
-	break;
+        ops = OP_ADD;
+        switch( *c ) {
+        case '-':
+            ops |= OP_DELETE;
+            doquotes = FALSE;
+            ++c;
+            break;
+        case '+':
+            ops |= OP_IMPORT;
+            doquotes = FALSE;
+            ignoreSpacesInQuotes = TRUE;
+            ++c;
+            break;
+        }
+        break;
 #if defined(__UNIX__)
     case ':':
 #else
     case '*':
 #endif
-	ops |= OP_EXTRACT;
-	if( *c == '-' ) {
-	    ops |= OP_DELETE;
-	    doquotes = FALSE;
-	    ++c;
-	}
-	break;
+        ops |= OP_EXTRACT;
+        if( *c == '-' ) {
+            ops |= OP_DELETE;
+            doquotes = FALSE;
+            ++c;
+        }
+        break;
     default:
-	FatalError( ERR_BAD_CMDLINE, start );
+        FatalError( ERR_BAD_CMDLINE, start );
     }
     eatwhite( c );
     c = GetString( c, buff, doquotes, ignoreSpacesInQuotes );
@@ -468,7 +510,7 @@ static char *ParseCommand( char *c )
     return( c );
 }
 
-#define MAX_CMDLINE	(10*1024)
+#define MAX_CMDLINE     (10*1024)
 
 static void ParseOneLine( char *c )
 {
@@ -478,101 +520,140 @@ static void ParseOneLine( char *c )
     char   path[_MAX_PATH];
     char   file[_MAX_PATH];
     long   h;
+    FILE   *fp;
     struct _finddata_t ff;
 
     buff = MemAlloc( MAX_CMDLINE );
     for( ;; ) {
-	eatwhite( c );
-	start = c;
-	switch( *c ) {
+        eatwhite( c );
+        start = c;
+        switch( *c ) {
 #if !defined(__UNIX__)
-	case '/':
-	    c = ParseOption( c, buff );
-	    if( c == start )
-		FatalError( ERR_BAD_OPTION, c[ 1 ] );
-	    break;
+        case '/':
+            c = ParseOption( c, buff );
+            if ( c == start )
+                FatalError( ERR_BAD_OPTION, c[ 1 ] );
+            break;
 #endif
+        case '-':
+            if ( CmdList == NULL && Options.input_name == NULL ) {
+                c = ParseOption( c, buff );
+                if ( c != start ) {
+                    break;
+                }
+            }
 
-	case '-':
-	    if( CmdList == NULL && Options.input_name == NULL ) {
-		c = ParseOption( c, buff );
-		if( c != start ) {
-		    break;
-		}
-	    }
 #if defined(__UNIX__)
-	case ':':
+        case ':':
 #endif
-	case '+':
-	    c = ParseCommand( c );
-	    break;
-	case '@':
-	    ++c;
-	    c = GetString( c, buff, TRUE, FALSE );
-	    {
-		char *env = WlibGetEnv( buff );
-		if( env != NULL ) {
-		    ParseOneLine(env);
-		} else {
-		    FILE    *io;
-		    DefaultExtension( buff, EXT_CMD );
-		    io = fopen( buff, "r" );
-		    if( io == NULL ) {
-			FatalError( ERR_CANT_OPEN, buff, strerror( errno ) );
-		    }
-		    while( fgets( buff, MAX_CMDLINE, io ) != NULL ) {
-			ParseOneLine( buff );
-		    }
-		    fclose( io );
-		}
-	    }
-	    break;
-	case '\0':
-	case '#':
-	    // comment - blow away line
-	    MemFree( buff );
-	    return;
-#if !defined(__UNIX__)
-	case '*':
-	    if (*(c - 1) == '-' || *(c + 1) != '.') {
-		c = ParseCommand( c );
-		break;
-	    }
-#endif
-	default:
+        case '+':
+            c = ParseCommand( c );
+            break;
+        case '@':
+            ++c;
+            c = GetString( c, buff, TRUE, FALSE );
+            {
+                char *env = WlibGetEnv( buff );
+                if( env != NULL ) {
+                    ParseOneLine(env);
+                } else {
+                    DefaultExtension( buff, EXT_CMD );
+                    fp = fopen( buff, "r" );
+                    if( fp == NULL )
+                        FatalError( ERR_CANT_OPEN, buff, strerror( errno ) );
+                    while( fgets( buff, MAX_CMDLINE, fp ) != NULL )
+                        ParseOneLine( buff );
+                    fclose( fp );
+                }
+            }
+            break;
+        case '\0':
+            if ( Options.def_file != NULL && Options.input_name != NULL ) {
 
-	    c = GetString( c, buff, TRUE, FALSE );
-	    if( strcmp( buff, "?" ) == 0 ) {
-		Banner();
-		Usage();
-	    }
-	    if( Options.input_name ) {
-		if ((h = _findfirst(buff, &ff)) != -1 ) {
-		    strcpy(path, buff);
-		    if ((p = strrchr(path, '\\')) != NULL)
-			*p = 0;
-		    else
-			path[0] = 0;
-		    do {
-			if (path[0] != 0) {
-			    strcpy(file, path);
-			    strcat(file, "\\");
-			} else {
-			    file[0] = 0;
-			}
-			strcat(file, ff.name);
-			AddCommand( OP_ADD|OP_DELETE, file );
-		    } while ((_findnext(h, &ff) != -1));
-		    _findclose(h);
-		} else {
-		    AddCommand( OP_ADD|OP_DELETE, buff );
-		}
-	    } else {
-		DefaultExtension( buff, EXT_LIB );
-		Options.input_name = DupStr( buff );
-	    }
-	    break;
-	}
+                fp = fopen( Options.def_file, "r" );
+                if( fp == NULL )
+                    FatalError( ERR_CANT_OPEN, Options.def_file, strerror( errno ) );
+
+                p = Options.def_file;
+                MemFree( Options.def_file );
+                Options.def_file = NULL;
+
+                path[0] = '\0';
+                while ( fgets( buff, MAX_CMDLINE, fp ) != NULL ) {
+
+                    start = buff;
+                    eatwhite( start );
+                    c = GetString( start, file, TRUE, FALSE );
+                    if ( c == start )
+                        continue;
+
+                    if ( memicmp( file, "LIBRARY", 8 ) == 0 ) {
+
+                        GetString( c, path, TRUE, FALSE );
+
+                        if ( fgets( buff, MAX_CMDLINE, fp ) == NULL )
+                            break;
+                        if ( memicmp( buff, "EXPORTS", 0 ) != 0 )
+                            FatalError( ERR_NO_EXPORTS, p );
+                        continue;
+                    } else if ( path[0] == '\0' )
+                        FatalError( ERR_NO_EXPORTS, p );
+                    strcpy( buff, "++" );
+                    if ( Options.processor != WL_PROC_AMD64 )
+                        strcat( buff, "_" );
+                    strcat( buff, file );
+                    strcat( buff, ".\'" );
+                    strcat( buff, path );
+                    strcat( buff, "\'" );
+                    ParseOneLine( buff );
+                }
+                fclose( fp );
+            }
+        case '#':
+            // comment - blow away line
+            MemFree( buff );
+            return;
+#if !defined(__UNIX__)
+        case '*':
+            if (*(c - 1) == '-' || *(c + 1) != '.') {
+                c = ParseCommand( c );
+                break;
+            }
+#endif
+        default:
+
+            c = GetString( c, buff, TRUE, FALSE );
+            if( strcmp( buff, "?" ) == 0 ) {
+                Banner();
+                Usage();
+            }
+            if ( Options.input_name ) {
+                if ((h = _findfirst(buff, &ff)) != -1 ) {
+                    strcpy(path, buff);
+                    if ((p = strrchr(path, '\\')) != NULL)
+                        *p = 0;
+                    else
+                        path[0] = 0;
+                    do {
+                        if (path[0] != 0) {
+                            strcpy(file, path);
+                            strcat(file, "\\");
+                        } else {
+                            file[0] = 0;
+                        }
+                        strcat(file, ff.name);
+                        AddCommand( OP_ADD|OP_DELETE, file );
+                    } while ((_findnext(h, &ff) != -1));
+                    _findclose(h);
+                } else {
+                    AddCommand( OP_ADD|OP_DELETE, buff );
+                }
+            } else {
+                DefaultExtension( buff, EXT_LIB );
+                Options.input_name = DupStr( buff );
+            }
+            break;
+        }
     }
 }
 
@@ -582,183 +663,183 @@ static char *ParseArOption( char *c, operation *mode )
 
     DEBUG(("wlib.ParseArOption: %s\n", c));
     while( notwhite( *c ) ) {
-	switch( my_tolower( *c ) ) {
-	case '?':
-	    Banner();
-	    Usage();
-	    break;
-	case 'c':
-	    if( Options.no_c_warn ) {
-		DuplicateOption( start );
-	    }
-	    Options.no_c_warn = TRUE;
-	    break;
-	case 'd':
-	    if( *mode != OP_NONE ) {
-		FatalError( ERR_BAD_OPTION, c[ 0 ] );
-	    }
-	    *mode = OP_DELETE;
-	    break;
-	case 'p':
-	    //ignore not implemented
-	    break;
-	case 'r':
-	    if( *mode != OP_NONE ) {
-		FatalError( ERR_BAD_OPTION, c[ 0 ] );
-	    }
-	    *mode = OP_ADD | OP_DELETE;
-	    break;
-	case 't':
-	    if( *mode != OP_NONE ) {
-		FatalError( ERR_BAD_OPTION, c[ 0 ] );
-	    }
-	    *mode = OP_TABLE;
-	    Options.list_contents = 1;
-	    break;
-	case 'u':
-	    if( Options.update ) {
-		DuplicateOption( start );
-	    }
-	    Options.update = TRUE;
-	    break;
-	case 'v':
-	    if( Options.verbose ) {
-		DuplicateOption( start );
-	    }
-	    Options.verbose = TRUE;
-	    break;
-	case 'x':
-	    if( *mode != OP_NONE ) {
-		FatalError( ERR_BAD_OPTION, c[ 0 ] );
-	    }
-	    *mode = OP_EXTRACT;
-	    break;
-	case '-':
-	    break;
-	default:
-	    FatalError( ERR_BAD_OPTION, c[ 0 ] );
-	}
-	c++;
+        switch( my_tolower( *c ) ) {
+        case '?':
+            Banner();
+            Usage();
+            break;
+        case 'c':
+            if( Options.no_c_warn ) {
+                DuplicateOption( start );
+            }
+            Options.no_c_warn = TRUE;
+            break;
+        case 'd':
+            if ( *mode != OP_NONE ) {
+                FatalError( ERR_BAD_OPTION, c[ 0 ] );
+            }
+            *mode = OP_DELETE;
+            break;
+        case 'p':
+            //ignore not implemented
+            break;
+        case 'r':
+            if( *mode != OP_NONE ) {
+                FatalError( ERR_BAD_OPTION, c[ 0 ] );
+            }
+            *mode = OP_ADD | OP_DELETE;
+            break;
+        case 't':
+            if( *mode != OP_NONE ) {
+                FatalError( ERR_BAD_OPTION, c[ 0 ] );
+            }
+            *mode = OP_TABLE;
+            Options.list_contents = 1;
+            break;
+        case 'u':
+            if( Options.update ) {
+                DuplicateOption( start );
+            }
+            Options.update = TRUE;
+            break;
+        case 'v':
+            if( Options.verbose ) {
+                DuplicateOption( start );
+            }
+            Options.verbose = TRUE;
+            break;
+        case 'x':
+            if( *mode != OP_NONE ) {
+                FatalError( ERR_BAD_OPTION, c[ 0 ] );
+            }
+            *mode = OP_EXTRACT;
+            break;
+        case '-':
+            break;
+        default:
+            FatalError( ERR_BAD_OPTION, c[ 0 ] );
+        }
+        c++;
     }
     return( c );
 }
 
 static void ParseOneArLine( char *c )
 {
-    char	*buff;
-    operation	mode;
-    bool	done_options;
+    char        *buff;
+    operation   mode;
+    bool        done_options;
 
     mode = OP_NONE;
     done_options = FALSE;
     buff = MemAlloc( MAX_CMDLINE );
     for( ;; ) {
-	eatwhite( c );
-	switch( *c ) {
-	case '\0':
-	    if( mode == OP_EXTRACT ) {
-		Options.explode = TRUE;
-	    }
-	    MemFree( buff );
-	    return;
-	case '-':
-	    if( !done_options ) {
-		if( *(c + 1) == '-' ) {
-		    c += 2;
-		    done_options = TRUE;
-		} else {
-		    c = ParseArOption( c, &mode );
-		}
-		break;
-	    }
-	    //fall to default
-	default:
-	    if( mode == OP_NONE ) {
-		c = ParseArOption( c, &mode );
-		break;
-	    }
-	    c = GetString( c, buff, TRUE, FALSE );
-	    if( Options.input_name ) {
-		AddCommand( mode, buff );
-		break;
-	    } else {
-		DefaultExtension( buff, EXT_LIB );
-		Options.input_name = DupStr( buff );
-	    }
-	    break;
-	}
+        eatwhite( c );
+        switch( *c ) {
+        case '\0':
+            if( mode == OP_EXTRACT ) {
+                Options.explode = TRUE;
+            }
+            MemFree( buff );
+            return;
+        case '-':
+            if( !done_options ) {
+                if( *(c + 1) == '-' ) {
+                    c += 2;
+                    done_options = TRUE;
+                } else {
+                    c = ParseArOption( c, &mode );
+                }
+                break;
+            }
+            //fall to default
+        default:
+            if( mode == OP_NONE ) {
+                c = ParseArOption( c, &mode );
+                break;
+            }
+            c = GetString( c, buff, TRUE, FALSE );
+            if( Options.input_name ) {
+                AddCommand( mode, buff );
+                break;
+            } else {
+                DefaultExtension( buff, EXT_LIB );
+                Options.input_name = DupStr( buff );
+            }
+            break;
+        }
     }
 }
 
 void ProcessCmdLine( char *argv[] )
 {
-    char	*parse;
-    char	*env;
-    lib_cmd	*cmd;
+    char        *parse;
+    char        *env;
+    lib_cmd     *cmd;
 
     if( FNCMP( MakeFName( ImageName ), "ar" ) == 0 || WlibGetEnv( AR_MODE_ENV ) != NULL ) {
-	Options.ar = TRUE;
+        Options.ar = TRUE;
     }
     if( Options.ar ) {
-	env = WlibGetEnv( "AR" );
+        env = WlibGetEnv( "AR" );
     } else {
-	env = WlibGetEnv( "WLIB" );
+        env = WlibGetEnv( "WLIB" );
     }
     if( env == NULL && argv[ 1 ] == NULL || argv[ 1 ][ 0 ] == '\0' ) {
-	Banner();
-	Usage();
+        Banner();
+        Usage();
     }
     if( env != NULL ) {
-	parse = DupStr( env );
-	if( Options.ar ) {
-	    ParseOneArLine( parse );
-	} else {
-	    ParseOneLine( parse );
-	}
-	MemFree( parse );
+        parse = DupStr( env );
+        if( Options.ar ) {
+            ParseOneArLine( parse );
+        } else {
+            ParseOneLine( parse );
+        }
+        MemFree( parse );
     }
     argv++;
     while( *argv != NULL ) {
-	parse = DupStr( *argv );
-	if( Options.ar ) {
-	    ParseOneArLine( parse );
-	} else {
-	    ParseOneLine( parse );
-	}
-	MemFree( parse );
-	argv++;
+        parse = DupStr( *argv );
+        if( Options.ar ) {
+            ParseOneArLine( parse );
+        } else {
+            ParseOneLine( parse );
+        }
+        MemFree( parse );
+        argv++;
     }
     if( Options.ar && CmdList != NULL && Options.explode ) {
-	Options.explode = 0;
+        Options.explode = 0;
     } else if( CmdList == NULL && !(Options.list_contents) && !(Options.explode)
-	    && !(Options.new_library) ) {
-	/* Default action: List the input lib */
-	if( Options.output_name == NULL ) {
-	    Options.list_contents = 1;
-	    Options.list_file = DupStr("");
-	} else { /* Or copy it to the output lib */
-	    Options.modified = TRUE;
-	}
+            && !(Options.new_library) ) {
+        /* Default action: List the input lib */
+        if( Options.output_name == NULL ) {
+            Options.list_contents = 1;
+            Options.list_file = DupStr("");
+        } else { /* Or copy it to the output lib */
+            Options.modified = TRUE;
+        }
     }
 
     if( !Options.ar ) {
-	Banner();
+        Banner();
     }
     if( Options.input_name == NULL ) {
-	FatalError( ERR_NO_LIBNAME );
+        FatalError( ERR_NO_LIBNAME );
     }
     if( access( Options.input_name, F_OK ) != 0 && !Options.new_library ) {
-	if( !Options.no_c_warn ) {
-	    Warning( ERR_CREATING_LIBRARY, Options.input_name );
-	}
-	Options.new_library = 1;
+        if( !Options.no_c_warn ) {
+            Warning( ERR_CREATING_LIBRARY, Options.input_name );
+        }
+        Options.new_library = 1;
     }
     if( Options.new_library ) {
-	for( cmd = CmdList; cmd != NULL; cmd = cmd->next ) {
-	    if( cmd->ops & OP_EXTRACT ) {
-		FatalError( ERR_DELETE_AND_CREATE );
-	    }
-	}
+        for( cmd = CmdList; cmd != NULL; cmd = cmd->next ) {
+            if( cmd->ops & OP_EXTRACT ) {
+                FatalError( ERR_DELETE_AND_CREATE );
+            }
+        }
     }
 }
 

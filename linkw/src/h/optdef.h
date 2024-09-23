@@ -64,6 +64,7 @@ typedef struct {
     char            *input_name;
     char            *output_directory;
     char            *list_file;
+    char            *def_file;
     char            *output_name;
     char            *export_list_file;
     char            *explode_ext;

@@ -144,8 +144,7 @@ static void PutARPadding( char * element, ar_len current_len, ar_len desired_len
 
 static void PutARName( char *ar_name, char * arch_name )
 {
-    ar_len      name_len;
-
+    ar_len name_len;
 
     name_len = strlen( arch_name );
     strncpy( ar_name, arch_name, name_len );
@@ -156,7 +155,7 @@ static void PutARName( char *ar_name, char * arch_name )
 
 static void PutARValue( char *element, uint_32 value, uint_8 base, ar_len desired_len )
 {
-    ar_len      value_len;
+    ar_len value_len;
 
     ultoa( value, element, base );
     value_len = strlen( element );
@@ -169,8 +168,13 @@ void CreateARHeader( ar_header *ar, arch_header * arch )
 {
     PutARName( ar->name, arch->name );
     PutARValue( ar->date, arch->date, AR_ELEMENT_BASE, AR_DATE_LEN );
-    PutARValue( ar->uid, arch->uid, AR_ELEMENT_BASE, AR_UID_LEN );
-    PutARValue( ar->gid, arch->gid, AR_ELEMENT_BASE, AR_GID_LEN );
+    if ( Options.processor == WL_PROC_AMD64 ) {
+       PutARPadding( ar->uid, 0, AR_UID_LEN );
+       PutARPadding( ar->gid, 0, AR_GID_LEN );
+    } else {
+        PutARValue( ar->uid, arch->uid, AR_ELEMENT_BASE, AR_UID_LEN );
+        PutARValue( ar->gid, arch->gid, AR_ELEMENT_BASE, AR_GID_LEN );
+    }
     PutARValue( ar->mode, arch->mode, AR_MODE_BASE, AR_MODE_LEN );
     PutARValue( ar->size, arch->size, AR_ELEMENT_BASE, AR_SIZE_LEN );
     strncpy( ar->header_ident, AR_HEADER_IDENT, AR_HEADER_IDENT_LEN );

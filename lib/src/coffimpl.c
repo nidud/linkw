@@ -237,7 +237,7 @@ static int DataImpLibInit( coff_file_handle coff_file_hnd )
 static int AddDataImpLib( coff_file_handle coff_file_hnd, void * buff, int len )
 {
     char    *x;
-        
+
     x = _ClientAlloc( coff_file_hnd, IMPLIB_LEN + len );
     if( x == NULL )
         return( ORL_OUT_OF_MEMORY );
@@ -330,7 +330,7 @@ I got following information from Microsoft about name type and name conversion.
     // __fastcall uses @ as prefix and @nn as suffix
 
     // this solution is stupid, probably it needs improvement
-    // there is no more information from Microsoft 
+    // there is no more information from Microsoft
 
     if( *src != 0 ) {
         switch (type) {
@@ -425,7 +425,7 @@ static int CoffCreateImport( coff_file_handle coff_file_hnd, import_sym * import
         symbol_text_exportedName = AddCoffSymbol( &c_file, import->exportedName, 0x0, section_no, 0x20, IMAGE_SYM_CLASS_EXTERNAL, 0 );
         break;
     }
-        
+
 /* .idata$5 section header */
     if( import->type == IMPORT_OBJECT_ORDINAL) {
         //section_no = AddCoffSection( &c_file, ".idata$5", sizeof(bnull.b32), 0, IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_LNK_COMDAT | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ |  IMAGE_SCN_MEM_WRITE );

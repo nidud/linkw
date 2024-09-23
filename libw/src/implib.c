@@ -773,25 +773,33 @@ int CoffImportSize( import_sym *import )
 
     switch( import->type ) {
     case IMPORT_DESCRIPTOR:
-	//return( COFF_FILE_HEADER_SIZE + 0xe0		  // header
-	return( COFF_FILE_HEADER_SIZE			// header (no opt hdr)
+	ret = ( COFF_FILE_HEADER_SIZE			// header (no opt hdr)
 	    + 2 * COFF_SECTION_HEADER_SIZE +		// section table (headers)
 	    + 0x14 + 3 * COFF_RELOC_SIZE		// section data
 	    + (dll_len | 1) + 1				// section data
 	    + 7 * COFF_SYM_SIZE				// symbol table
-	    + 4 + mod_len + 21 + 25 + mod_len + 18 );	// string table
+	    + 4 + mod_len + 21 + 25 + mod_len + 18);	// string table
+	if ( Options.processor == WL_PROC_AMD64 )
+	    ret += (dll_len + 54) + 58;
+	return( ret );
     case NULL_IMPORT_DESCRIPTOR:
-	return( COFF_FILE_HEADER_SIZE
+	ret = ( COFF_FILE_HEADER_SIZE
 	    + COFF_SECTION_HEADER_SIZE
 	    + 0x14
 	    + COFF_SYM_SIZE
 	    + 4 + 25 ) ;
+	if ( Options.processor == WL_PROC_AMD64 )
+	    ret += (dll_len + 54) + 58;
+	return( ret );
     case NULL_THUNK_DATA:
-	return( COFF_FILE_HEADER_SIZE
+	ret = ( COFF_FILE_HEADER_SIZE
 	    + 2 * COFF_SECTION_HEADER_SIZE
 	    + 0x4 + 0x4
 	    + COFF_SYM_SIZE
 	    + 4 + mod_len + 18 ) ;
+	if ( Options.processor == WL_PROC_AMD64 )
+	    ret += (dll_len + 54) + 58 + 8;
+	return( ret );
     case ORDINAL:
     case NAMED:
 	sym_len = strlen( import->u.sym.symName );

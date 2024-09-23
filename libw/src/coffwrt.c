@@ -34,6 +34,10 @@
 #include <assert.h>
 #include <error.h>
 
+#define LINKID14 0x01018548
+#define LINKID12 0x00DD2775
+#define MSLINKID LINKID12
+
 //IMPORT_DESCRIPT optional header
 
 static unsigned_8       CoffImportDescriptorHeader[] = {
@@ -83,6 +87,13 @@ static void InitCoffFile( coff_lib_file *c_file )
 static void SetCoffFile( coff_lib_file *c_file, processor_type processor,
      unsigned_32 time_stamp, unsigned_16 opt_hdr_size)
 {
+    c_file->header.num_sections = 0;
+    c_file->header.time_stamp = time_stamp;
+    c_file->header.num_symbols = 0;
+    c_file->header.opt_hdr_size = opt_hdr_size;
+    c_file->string_table_size = 0;
+    c_file->header.flags = IMAGE_FILE_32BIT_MACHINE;
+
     switch( processor ) {
     case WL_PROC_PPC:
         c_file->header.cpu_type = IMAGE_FILE_MACHINE_POWERPC;
@@ -92,18 +103,13 @@ static void SetCoffFile( coff_lib_file *c_file, processor_type processor,
         break;
     case WL_PROC_AMD64: /* jwlink */
         c_file->header.cpu_type = IMAGE_FILE_MACHINE_AMD64;
+        c_file->header.flags = 0;
         break;
     case WL_PROC_X86:
     default:
         c_file->header.cpu_type = IMAGE_FILE_MACHINE_I386;
         break;
     }
-    c_file->header.num_sections = 0;
-    c_file->header.time_stamp = time_stamp;
-    c_file->header.num_symbols = 0;
-    c_file->header.opt_hdr_size = opt_hdr_size;
-    c_file->header.flags = IMAGE_FILE_32BIT_MACHINE;
-    c_file->string_table_size = 0;
 }
 
 static void FiniCoffLibFile( coff_lib_file *c_file )
@@ -208,7 +214,10 @@ static void WriteCoffFileHeader( libfile io, coff_lib_file *c_file )
     for( i = 0; i < c_file->header.num_sections; i++ ) {
         c_file->section[ i ].rawdata_ptr = d_ptr;
         d_ptr += c_file->section[ i ].size;
-        c_file->section[ i ].reloc_ptr = d_ptr;
+        if ( c_file->section[ i ].num_relocs )
+            c_file->section[ i ].reloc_ptr = d_ptr;
+        else
+            c_file->section[ i ].reloc_ptr = 0;
         d_ptr += c_file->section[ i ].num_relocs * COFF_RELOC_SIZE;
     }
     c_file->header.sym_table = d_ptr;
@@ -265,6 +274,7 @@ void CoffWriteImport( libfile io, sym_file *sfile )
     DEBUG(("CoffWriteImport() enter: dll=%s name=%s\n",
         sfile->import->DLLName ? sfile->import->DLLName : "NULL",
         sfile->import->u.sym.symName ? sfile->import->u.sym.symName : "NULL" ));
+
     InitCoffFile( &c_file );
     // We are being extremely cautious in the following lines of code
     // up to the switch statement.
@@ -324,55 +334,60 @@ void CoffWriteImport( libfile io, sym_file *sfile )
             SetCoffFile( &c_file, sfile->import->processor, sfile->arch.date, 0 );
             break;
         }
+
+        if ( Options.processor == WL_PROC_AMD64 )
+            AddCoffSection( &c_file, ".debug$S", dll_name_len + 0x36, 0, 0x42100040);
         /* jwlink: alignment for .idata$2 set to 4 bytes */
-        AddCoffSection( &c_file, ".idata$2", 0x14, 3, IMAGE_SCN_ALIGN_4BYTES
-            | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        AddCoffSection( &c_file, ".idata$2", 0x14, 3, IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
         assert( mod_name_len != 0 );
         if( mod_name_len == 0 )
             FatalError( ERR_CANT_DO_IMPORT, "AR", "NO DLL NAME" );
-        /* linkw: alignment for .idata$6 set to 8 bytes */
-        if ( type == IMAGE_REL_AMD64_ADDR32NB )
-            AddCoffSection( &c_file, ".idata$6", ( dll_name_len | 1 ) + 1, 0, IMAGE_SCN_ALIGN_8BYTES
-                | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
-        else
-            AddCoffSection( &c_file, ".idata$6", ( dll_name_len | 1 ) + 1, 0, IMAGE_SCN_ALIGN_2BYTES
-                | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        AddCoffSection( &c_file, ".idata$6", ( dll_name_len | 1 ) + 1, 0, IMAGE_SCN_ALIGN_2BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+
+        if ( Options.processor == WL_PROC_AMD64 )
+            AddCoffSymbol( &c_file, "@comp.id", MSLINKID, -1, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_STATIC, 0 );
         memcpy( buffer, "__IMPORT_DESCRIPTOR_", 20 );
         memcpy( buffer + 20, modName, mod_name_len + 1 );
-        AddCoffSymbol( &c_file, buffer, 0x0, 1, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_EXTERNAL, 0 );
-#if 0 /* JWLink: bugfix */
-        AddCoffSymbol( &c_file, ".idata$2", 0xC0000040, 1, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_STATIC, 0 );
-        AddCoffSymbol( &c_file, ".idata$6", 0x0, 2, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_SECTION, 0 );
-#else
-        AddCoffSymbol( &c_file, ".idata$2", 0xC0000040, 1, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_SECTION, 0 );
-        AddCoffSymbol( &c_file, ".idata$6", 0x0, 2, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_STATIC, 0 );
-#endif
-        AddCoffSymbol( &c_file, ".idata$4", 0xC0000040, 0, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_SECTION, 0 );
-        AddCoffSymbol( &c_file, ".idata$5", 0xC0000040, 0, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_SECTION, 0 );
-        AddCoffSymbol( &c_file, "__NULL_IMPORT_DESCRIPTOR", 0x0, 0, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_EXTERNAL, 0 );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            AddCoffSymbol( &c_file, buffer, 0x0, 2, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
+            AddCoffSymbol( &c_file, ".idata$2", 0xC0000040, 2, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_SECTION, 0 );
+            AddCoffSymbol( &c_file, ".idata$6", 0x0, 3, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_STATIC, 0 );
+        } else {
+            AddCoffSymbol( &c_file, buffer, 0x0, 1, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
+            AddCoffSymbol( &c_file, ".idata$2", 0xC0000040, 1, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_SECTION, 0 );
+            AddCoffSymbol( &c_file, ".idata$6", 0x0, 2, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_STATIC, 0 );
+        }
+        AddCoffSymbol( &c_file, ".idata$4", 0xC0000040, 0, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_SECTION, 0 );
+        AddCoffSymbol( &c_file, ".idata$5", 0xC0000040, 0, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_SECTION, 0 );
+        AddCoffSymbol( &c_file, "__NULL_IMPORT_DESCRIPTOR", 0x0, 0, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
         buffer[ 0 ] = 0x7f;
         memcpy( buffer + 1, modName, mod_name_len );
         memcpy( buffer + 1 + mod_name_len, "_NULL_THUNK_DATA", 17 );
-        AddCoffSymbol( &c_file, buffer, 0x0, 0, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_EXTERNAL, 0 );
+        AddCoffSymbol( &c_file, buffer, 0x0, 0, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
+
         WriteCoffFileHeader( io, &c_file );
         /* jwlink: no optional header for i386! */
         if ( type != IMAGE_REL_I386_DIR32NB && type != IMAGE_REL_AMD64_ADDR32NB )
             LibWrite( io, CoffImportDescriptorHeader, 0xe0 );
+
         WriteCoffSections( io, &c_file );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            LibWrite( io, "\x02\x00\x00\x00\x11\x00\x09\x00\x00\x00\x00\x00", 12 );
+            LibWrite( io, &dll_name_len, 1 );
+            LibWrite( io, dllName, dll_name_len );
+            LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
+        }
         memset( buffer, 0, 0x14 );
         LibWrite( io, buffer, 0x14 );
-        WriteCoffReloc( io, 0xc, 2, type );
-        WriteCoffReloc( io, 0x0, 3, type );
-        WriteCoffReloc( io, 0x10, 4, type );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            WriteCoffReloc( io, 0xc, 3, type );
+            WriteCoffReloc( io, 0x0, 4, type );
+            WriteCoffReloc( io, 0x10, 5, type );
+        } else {
+            WriteCoffReloc( io, 0xc, 2, type );
+            WriteCoffReloc( io, 0x0, 3, type );
+            WriteCoffReloc( io, 0x10, 4, type );
+        }
         LibWrite( io, dllName, dll_name_len + 1 );
         if( ( dll_name_len + 1 ) & 1 ) {
             LibWrite( io, "\0", 1 );
@@ -380,34 +395,58 @@ void CoffWriteImport( libfile io, sym_file *sfile )
         break;
     case NULL_IMPORT_DESCRIPTOR:
         SetCoffFile( &c_file, sfile->import->processor, sfile->arch.date, 0 );
+        if ( Options.processor == WL_PROC_AMD64 )
+            AddCoffSection( &c_file, ".debug$S", dll_name_len + 0x36, 0, 0x42100040);
         /* jwlink: alignment set to 4 bytes */
-        AddCoffSection( &c_file, ".idata$3", 0x14, 0, IMAGE_SCN_ALIGN_4BYTES
-            | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
-        AddCoffSymbol( &c_file,"__NULL_IMPORT_DESCRIPTOR", 0x0, 1, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_EXTERNAL, 0 );
+        AddCoffSection( &c_file, ".idata$3", 0x14, 0, IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            AddCoffSymbol( &c_file, "@comp.id", MSLINKID, -1, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_STATIC, 0 );
+            AddCoffSymbol( &c_file,"__NULL_IMPORT_DESCRIPTOR", 0x0, 2, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
+        } else {
+            AddCoffSymbol( &c_file,"__NULL_IMPORT_DESCRIPTOR", 0x0, 1, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
+        }
         WriteCoffFileHeader( io, &c_file );
         WriteCoffSections( io, &c_file );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            LibWrite( io, "\x02\x00\x00\x00\x11\x00\x09\x00\x00\x00\x00\x00", 12 );
+            LibWrite( io, &dll_name_len, 1 );
+            LibWrite( io, dllName, dll_name_len );
+            LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
+        }
         memset( buffer, 0 , 0x14 );
         LibWrite( io, buffer, 0x14 );
         break;
     case NULL_THUNK_DATA:
         SetCoffFile( &c_file, sfile->import->processor, sfile->arch.date, 0 );
-        AddCoffSection( &c_file, ".idata$5", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES
-            | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
-        AddCoffSection( &c_file, ".idata$4", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES // 0xC0600040 );//
-            | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            AddCoffSection( &c_file, ".debug$S", dll_name_len + 0x36, 0, 0x42100040);
+            AddCoffSection( &c_file, ".idata$5", 0x8, 0, IMAGE_SCN_ALIGN_8BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+            AddCoffSection( &c_file, ".idata$4", 0x8, 0, IMAGE_SCN_ALIGN_8BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        } else {
+            AddCoffSection( &c_file, ".idata$5", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+            AddCoffSection( &c_file, ".idata$4", 0x4, 0, IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE );
+        }
         assert( mod_name_len != 0 );
         if( mod_name_len == 0 )
             FatalError( ERR_CANT_DO_IMPORT, "AR", "NO DLL NAME" );
+        if ( Options.processor == WL_PROC_AMD64 )
+            AddCoffSymbol( &c_file, "@comp.id", MSLINKID, -1, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_STATIC, 0 );
         buffer[ 0 ] = 0x7f;
         memcpy( buffer + 1, modName, mod_name_len );
         memcpy( buffer + 1 + mod_name_len, "_NULL_THUNK_DATA", 17 );
-        AddCoffSymbol( &c_file, buffer, 0x0, 1, IMAGE_SYM_TYPE_NULL,
-            IMAGE_SYM_CLASS_EXTERNAL, 0 );
+        AddCoffSymbol( &c_file, buffer, 0x0, 2, IMAGE_SYM_TYPE_NULL, IMAGE_SYM_CLASS_EXTERNAL, 0 );
+
         WriteCoffFileHeader( io, &c_file );
         WriteCoffSections( io, &c_file );
-        memset( buffer, 0 , 8 );
-        LibWrite( io, buffer, 8 );
+        memset( buffer, 0 , 16 );
+        if ( Options.processor == WL_PROC_AMD64 ) {
+            LibWrite( io, "\x02\x00\x00\x00\x11\x00\x09\x00\x00\x00\x00\x00", 12 );
+            LibWrite( io, &dll_name_len, 1 );
+            LibWrite( io, dllName, dll_name_len );
+            LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
+            LibWrite( io, buffer, 16 );
+        } else
+            LibWrite( io, buffer, 8 );
         break;
     case ORDINAL:
     case NAMED:
@@ -486,10 +525,11 @@ void CoffWriteImport( libfile io, sym_file *sfile )
                 imphdr->name_type = IMPORT_OBJECT_ORDINAL; /* =0 */
             imphdr->reserved = 0;
             LibWrite( io, &( c_file.header ), COFF_FILE_HEADER_SIZE );
-            if ( symName )
+            if ( symName ) {
                 LibWrite( io, symName, sym_name_len + 1 );
-            else
+            } else {
                 LibWrite( io, exportedName, exported_name_len + 1 );
+            }
             LibWrite( io, dllName, dll_name_len + 1 );
             goto done;
 #else
@@ -595,5 +635,4 @@ done:
 #endif
     FiniCoffLibFile( &c_file );
     MemFree( modName );
-    //MemFree( buffer );
 }
