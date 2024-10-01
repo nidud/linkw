@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  Command line parser enumerations, structures, constants and 
+* Description:  Command line parser enumerations, structures, constants and
 *               prototypes, including CmdTble function call prototypes
 *
 ****************************************************************************/
@@ -35,7 +35,7 @@ typedef enum {
     ENDOFLINE,
     ENDOFFILE,
     ENDOFCMD
-}                       place;
+} place;
 
 typedef enum {
     NONBUFFERED,
@@ -44,7 +44,7 @@ typedef enum {
     BUFFERED,
     ENVIRONMENT,
     SYSTEM
-}                       method;
+} method;
 
 typedef enum {
     SEP_NO,
@@ -58,18 +58,19 @@ typedef enum {
     SEP_PERCENT,
     SEP_DOT_EXT,
     SEP_LCURLY,
-    SEP_RCURLY
-}                       sep_type;
+    SEP_RCURLY,
+    SEP_COLON    /* Added for MS Link directives /<DIR>:<value> */
+} sep_type;
 
 typedef enum {
     OK,
     REJECT
-}                       status;
+} status;
 
 typedef enum {
-        ST_IS_ORDINAL,
-        ST_NOT_ORDINAL,
-        ST_INVALID_ORDINAL
+    ST_IS_ORDINAL,
+    ST_NOT_ORDINAL,
+    ST_INVALID_ORDINAL
 } ord_state;
 
 typedef struct tok {
@@ -107,7 +108,9 @@ typedef enum commandflag {
     CF_ANON_EXPORT      = 0x00004000,
     CF_AFTER_INC        = 0x00008000,  // option must be specd. after op inc
     CF_DOING_OPTLIB     = 0x00010000,
-    CF_NO_EXTENSION     = 0x00020000    // don't put an extension on exe name
+    CF_NO_EXTENSION     = 0x00020000,  // don't put an extension on exe name
+    CF_MSLINK           = 0x00040000,
+    CF_ADD_MANIFESTFILE = 0x00080000,
 } commandflag;
 
 typedef struct cmdfilelist {
@@ -138,6 +141,9 @@ typedef enum {
 } tokcontrol;
 
 /* command parse tables */
+
+extern parse_entry Machines[];   /* /MACHINE:{X64|X86} */
+extern parse_entry Subsystems[]; /* /SUBSYSTEM:{CONSOLE|WINDOWS} */
 
 extern parse_entry PosDbgMods[];
 extern parse_entry DbgMods[];
@@ -189,12 +195,15 @@ extern file_list    **CurrFList;
 extern tok          Token;
 extern commandflag  CmdFlags;
 extern char         *Name;
+extern char         *Manifestdependency;
+extern char         *ManifestFile;
 extern sysblock     *SysBlocks;
 extern sysblock     *LinkCommands;
 extern cmdfilelist *CmdFile;
 
 /* routines used in command parser */
 
+extern bool             ProcArgSPList( bool (*)( void ), tokcontrol );
 extern bool             ProcArgList( bool (*)( void ), tokcontrol );
 extern bool             ProcArgListEx( bool (*)( void ), tokcontrol ,cmdfilelist * );
 extern bool             ProcOne( parse_entry *, sep_type, bool );

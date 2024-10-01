@@ -86,7 +86,46 @@ parse_entry     SortOptions[] = {
     NULL
 };
 
+
+parse_entry     Machines[] = { /* /MACHINE:{X64|X86} */
+    "X86",          &ProcMachineX86,    MK_PE, 0,
+    "X64",          &ProcMachineX64,    MK_PE, 0,
+    NULL
+};
+
+parse_entry     Subsystems[] = { /* /SUBSYSTEM:{CONSOLE|WINDOWS} */
+    "CONSOLE",      &ProcSubsysConsole, MK_PE, 0,
+    "WINDOWS",      &ProcSubsysWindows, MK_PE, 0,
+    NULL
+};
+
 parse_entry     Directives[] = {
+
+    "ALIGN",                &ProcAlignment,     MK_PE, CF_MSLINK,
+    "DEFAULTLIB",           &ProcLibrary,       MK_PE, CF_MSLINK,
+    "DLL",                  &ProcOS2DLL,        MK_PE, CF_MSLINK,
+    "ENTRY",                &ProcStart,         MK_PE, CF_MSLINK,
+    "EXPORT",               &ProcExport,        MK_PE, CF_MSLINK|CF_AFTER_INC,
+    "FILEALIGN",            &ProcObjAlign,      MK_PE, CF_MSLINK,
+    "HEAP",                 &ProcHeapSize,      MK_PE, CF_MSLINK,
+    "INCLUDE",              &ProcSymTrace,      MK_PE, CF_MSLINK,
+    "LARGEADDRESSAWARE",    &ProcLargeAddr,     MK_PE, CF_MSLINK,
+    "LIBPATH",              &ProcLibPath,       MK_PE, CF_MSLINK,
+    "MACHINE",              &ProcMachine,       MK_PE, CF_MSLINK,
+    "MANIFEST",             &ProcManifest,      MK_PE, CF_MSLINK,
+    "MANIFESTFILE",         &ProcManifestFile,  MK_PE, CF_MSLINK,
+    "MANIFESTDEPENDENCY",   &ProcManDependency, MK_PE, CF_MSLINK,
+    "MAP",                  &ProcMap,           MK_PE, CF_MSLINK,
+    "MERGE",                &ProcMerge,         MK_PE, CF_MSLINK,
+    "NODEFAULTLIB",         &ProcNoDefLibs,     MK_PE, CF_MSLINK|CF_NO_DEF_LIBS,
+    "NOLOGO",               &ProcQuiet,         MK_PE, CF_MSLINK,
+    "OUT",                  &ProcName,          MK_PE, CF_MSLINK,
+    "STACK",                &ProcStack,         MK_PE, CF_MSLINK,
+    "STUB",                 &ProcStub,          MK_PE, CF_MSLINK,
+    "SUBSYSTEM",            &ProcSubsystem,     MK_PE, CF_MSLINK,
+    "VERBOSE",              &ProcVerbose,       MK_PE, CF_MSLINK,
+    "VERSION",              &ProcVersion,       MK_PE, CF_MSLINK,
+
     "File",         &ProcFiles,         MK_ALL, CF_HAVE_FILES,
     "MODFile",      &ProcModFiles,      MK_ALL, 0,
     "Library",      &ProcLibrary,       MK_ALL, 0,

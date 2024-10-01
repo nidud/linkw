@@ -389,21 +389,13 @@ static orl_return DeflibCmd( char *name, void *dummy )
     return( ORL_OKAY );
 }
 
-extern f_handle		QOpenRW( char * );
-extern unsigned		QRead( f_handle, void *, unsigned, char * );
-extern unsigned		QWrite( f_handle, void *, unsigned, char * );
-extern void		QClose( f_handle, char * );
-
 static orl_return ManifestCmd( char *name, void *dummy )
 {
+    int len;
     char *end;
-    char file[256];
-    f_handle h;
 
     dummy = dummy;
-
     if ( *name ) {
-
 	if ( *name == '"' ) {
 	    name++;
 	    end = strrchr( name, '"' );
@@ -417,58 +409,12 @@ static orl_return ManifestCmd( char *name, void *dummy )
 	    if ( *end )
 		*end++ = '\0';
 	}
-
-	strcpy( file, CurrMod->f.source->file->name );
-	end = strrchr( file, '.' );
-	if ( end )
-	    *end = '\0';
-	strcat( file, ".exe.manifest" );
-#if 1
-	h = QOpenRW( file );
-	if ( h != -1 ) {
-	    QWrite( h,
-		"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\r\n"
-		"<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>\r\n"
-		"  <trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v3\">\r\n"
-		"    <security>\r\n"
-		"      <requestedPrivileges>\r\n"
-		"        <requestedExecutionLevel level='asInvoker' uiAccess='false' />\r\n"
-		"      </requestedPrivileges>\r\n"
-		"    </security>\r\n"
-		"  </trustInfo>\r\n"
-		"  <dependency>\r\n"
-		"    <dependentAssembly>\r\n"
-		"      <assemblyIdentity ", 433, file );
-	    QWrite( h, name, strlen( name ), file );
-	    QWrite( h,
-		" />\r\n"
-		"    </dependentAssembly>\r\n"
-		"  </dependency>\r\n"
-		"</assembly>", 59, file );
-	    QClose( h, file );
-	}
-#else
-	fp = fopen( file, "wt" );
-	if ( fp != NULL ) {
-	    fprintf(fp,
-		"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n"
-		"<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>\n"
-		"  <trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v3\">\n"
-		"    <security>\n"
-		"      <requestedPrivileges>\n"
-		"        <requestedExecutionLevel level='asInvoker' uiAccess='false' />\n"
-		"      </requestedPrivileges>\n"
-		"    </security>\n"
-		"  </trustInfo>\n"
-		"  <dependency>\n"
-		"    <dependentAssembly>\n"
-		"      <assemblyIdentity %s />\n"
-		"    </dependentAssembly>\n"
-		"  </dependency>\n"
-		"</assembly>", name);
-	    fclose(fp);
-	}
-#endif
+	if ( Manifestdependency != NULL )
+	    _LnkFree( Manifestdependency );
+	len = strlen( name );
+	_ChkAlloc( Manifestdependency, len + 1 );
+	memcpy( Manifestdependency, name, len + 1 );
+	CmdFlags |= CF_ADD_MANIFESTFILE;
     }
     return( ORL_OKAY );
 }

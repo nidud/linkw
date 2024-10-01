@@ -31,6 +31,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
 #include "walloca.h"
@@ -50,9 +51,228 @@
 #include "permdata.h"
 #include "cmdall.h"
 #include "library.h"
+#include "loadpe.h"
+#include "fileio.h"
 
 static void	    *LastFile;
 static file_list    **LastLibFile;
+
+void ProcInitPE( void )
+{
+    if ( !( LinkState & FMT_SPECIFIED ) ) {
+
+	LinkState |= FMT_SPECIFIED;
+
+	FmtData.u.pe.heapcommit = 4*1024; /* arbitrary non-zero default. */
+	FmtData.u.pe.os2.heapsize = 0x100000; /* JWLink: default heapsize and stacksize for PE */
+	StackSize = 0x100000;
+	FmtData.u.pe.stackcommit = PE_DEF_STACK_COMMIT;
+	FmtData.u.pe.os2.segment_shift = 9; /* 512 byte arbitrary rounding */
+    }
+}
+
+/* /LARGEADDRESSAWARE[:NO] */
+
+bool ProcLargeAddr( void )
+{
+    if ( GetToken( SEP_COLON, 0 ) )
+	FmtData.u.pe.nolargeaddressaware = 1;
+    else
+	FmtData.u.pe.largeaddressaware = 1;
+    return( TRUE );
+}
+
+/* /MACHINE:{X64|X86} */
+
+static int GetLibPath( char *buffer )
+{
+    char *p;
+
+    if ( ( p = GetEnvString( "ASMCDIR" ) ) != NULL ) {
+	strcpy( buffer, p );
+	strcat( buffer, "\\lib" );
+	return( 1 );
+    }
+    strcpy( buffer, __argv[0] );
+    p = strrchr( buffer, '\\' );
+    if ( p ) {
+	*p = '\0';
+	p = strrchr( buffer, '\\' );
+	if ( p ) {
+	    strcpy( p, "\\lib" );
+	    return( 1 );
+	}
+    }
+    return( 0 );
+}
+
+static void AddMachineLib( char *directory )
+{
+    char path[PATH_MAX];
+
+    if ( GetLibPath( path ) ) {
+
+	strcat( path, "\\" );
+	strcat( path, directory );
+	AddLibPaths( path, strlen(path), FALSE ); // TRUE == add to front.
+    }
+}
+
+bool ProcMachineX86( void )
+{
+    AddMachineLib("x86");
+    return( TRUE );
+}
+
+bool ProcMachineX64( void )
+{
+    AddMachineLib("x64");
+    return( TRUE );
+}
+
+bool ProcMachine( void )
+{
+    ProcInitPE();
+    return( ProcOne( Machines, SEP_COLON, TRUE ) );
+}
+
+/* /MANIFEST[:{EMBED[,ID=resource_id]|NO}] */
+
+bool ProcManifest( void )
+{
+    if ( GetToken( SEP_COLON, 0 ) )
+	return( FALSE );
+
+    CmdFlags |= CF_ADD_MANIFESTFILE;
+    return( TRUE );
+}
+
+/* /MANIFESTFILE:filename */
+
+bool ProcManifestFile( void )
+{
+    if ( !GetToken( SEP_COLON, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) )
+	return( FALSE );
+    if ( ManifestFile != NULL )
+	_LnkFree( ManifestFile );
+    ManifestFile = tostring();
+    return( TRUE );
+}
+
+/* /MANIFESTDEPENDENCY:manifest_dependency */
+
+bool ProcManDependency( void )
+{
+    int len;
+    char *p;
+
+    if ( !GetToken( SEP_COLON, 0 ) )
+	return( FALSE );
+
+    p = Token.this;
+    len = Token.len;
+    if ( *p != '"' )
+	return( FALSE );
+
+    p++;
+    len -= 2;
+    if ( Manifestdependency != NULL )
+	_LnkFree( Manifestdependency );
+    _ChkAlloc( Manifestdependency, len + 1 );
+    memcpy( Manifestdependency, p, len );
+    Manifestdependency[ len ] = '\0';
+    CmdFlags |= CF_ADD_MANIFESTFILE;
+    return( TRUE );
+}
+
+bool AddManifestFile( void )
+{
+    char *p;
+    char file[256];
+    f_handle h;
+
+    if ( CmdFlags & CF_ADD_MANIFESTFILE ) {
+
+	LnkMsg( INF+MSG_CREATE_MANIFEST, NULL );
+
+	if ( ManifestFile != NULL ) {
+	    strcpy( file, ManifestFile );
+	    _LnkFree( ManifestFile );
+	    ManifestFile = NULL;
+	} else {
+	    strcpy( file, Root->outfile->fname );
+	    p = strrchr( file, '.' );
+	    if ( p ) *p = '\0';
+	    strcat( file, ".exe.manifest" );
+	}
+
+	h = QOpenRW( file );
+	if ( h != -1 ) {
+	    QWrite( h,
+		"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\r\n"
+		"<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>\r\n"
+		"  <trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v3\">\r\n"
+		"    <security>\r\n"
+		"      <requestedPrivileges>\r\n"
+		"        <requestedExecutionLevel level='asInvoker' uiAccess='false' />\r\n"
+		"      </requestedPrivileges>\r\n"
+		"    </security>\r\n"
+		"  </trustInfo>\r\n", 368, file );
+
+	    if ( Manifestdependency != NULL ) {
+		QWrite( h,
+			"  <dependency>\r\n"
+			"    <dependentAssembly>\r\n"
+			"      <assemblyIdentity ",16+25+24, file );
+		QWrite( h, Manifestdependency, strlen( Manifestdependency ), file );
+		QWrite( h,
+			" />\r\n"
+			"    </dependentAssembly>\r\n"
+			"  </dependency>\r\n", 5+26+17, file );
+		_LnkFree( Manifestdependency );
+		Manifestdependency = NULL;
+	    }
+	    QWrite( h, "</assembly>\r\n", 13, file );
+	    QClose( h, file );
+	}
+	CmdFlags &= ~CF_ADD_MANIFESTFILE;
+    }
+    return( TRUE );
+}
+
+/* /MERGE:from=to */
+
+bool ProcMerge( void )
+{
+    if ( GetToken( SEP_COLON, 0 ) )
+	GetToken( SEP_EQUALS, 0 );
+    return( TRUE );
+}
+
+/* /SUBSYSTEM:{CONSOLE|WINDOWS} */
+
+bool ProcSubsysConsole( void )
+{
+    /* symt _[w]mainCRTStartup */
+    FmtData.u.pe.subsystem = PE_SS_WINDOWS_CHAR;
+    return( TRUE );
+}
+
+bool ProcSubsysWindows( void )
+{
+    FmtData.u.pe.subsystem = PE_SS_WINDOWS_GUI;
+    return( TRUE );
+}
+
+bool ProcSubsystem( void )
+{
+    ProcInitPE();
+    FmtData.u.pe.submajor = 4;
+    FmtData.u.pe.subminor = 0;
+    FmtData.u.pe.sub_specd = TRUE;
+    return( ProcOne( Subsystems, SEP_COLON, TRUE ) );
+}
+
 
 void ResetCmdAll( void )
 /**********************/
@@ -74,7 +294,9 @@ bool ProcDosSeg( void )
 bool ProcName( void )
 /**************************/
 {
-    if( !GetToken( SEP_NO, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) )
+    sep_type req = (CmdFlags & CF_MSLINK) ? SEP_COLON : SEP_NO;
+
+    if ( !GetToken( req, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) )
 	return( FALSE );
     CmdFlags &= ~CF_UNNAMED;
     if( Name != NULL ) {
@@ -299,7 +521,6 @@ bool ProcSymFile( void )
 }
 
 static file_list *AllocNewFile( member_list *member )
-/****************************************************/
 {
     file_list	    *new_entry;
 
@@ -405,7 +626,6 @@ file_list *AddObjLib( char *name, lib_priority priority )
 }
 
 static bool AddLibFile( void )
-/****************************/
 {
     char	*ptr;
     char	*membname;
@@ -496,6 +716,8 @@ bool ProcFiles( void )
     if( (LinkFlags & (DWARF_DBI_FLAG|OLD_DBI_FLAG | NOVELL_DBI_FLAG) ) == 0 ) {
 	CmdFlags |= CF_FILES_BEFORE_DBI;
     }
+    if ( CmdFlags & CF_MSLINK )
+	return( ProcArgSPList( &AddFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
     return( ProcArgList( &AddFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
 }
 
@@ -506,7 +728,7 @@ bool ProcModFiles( void )
 }
 
 
-static bool AddLib( void )
+bool AddLib( void )
 /************************/
 {
     char	*ptr;
@@ -557,7 +779,9 @@ bool ProcLibPath( void )
 /*****************************/
 /* process libpath command */
 {
-    if( !GetToken( SEP_NO, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) ) {
+    sep_type req = (CmdFlags & CF_MSLINK) ? SEP_COLON : SEP_NO;
+
+    if( !GetToken( req, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) ) {
 	LnkMsg( LOC+LINE+WRN+MSG_VALUE_INCORRECT, "s", "libpath" );
 	return( TRUE );
     }
@@ -588,7 +812,7 @@ bool ProcPath( void )
 
 bool ProcMap( void )
 /*************************/
-/* process MAP option */
+/* process MAP option ( /MAP[:filename] ) */
 {
     MapFlags |= MAP_FLAG;
     if( GetToken( SEP_EQUALS, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) ) {
@@ -601,12 +825,28 @@ bool ProcMap( void )
     return( TRUE );
 }
 
+
 bool ProcStack( void )
 /***************************/
-/* process STACK option */
+/* process STACK option ( /STACK:reserve[,commit] ) */
 {
+    bool	    ret;
+    ord_state	    ord;
+    unsigned_32	    value;
+
     LinkFlags |= STK_SIZE_FLAG;
-    return( GetLong( &StackSize ) );
+    ret = GetLong( &StackSize );
+    if ( ret && ( CmdFlags & CF_MSLINK ) ) {
+	if ( GetToken( SEP_COMMA, 0 ) ) {
+	    ord = getatol( &value );
+	    if ( ord != ST_IS_ORDINAL || value == 0 ) {
+		LnkMsg( LOC+LINE+WRN+MSG_VALUE_INCORRECT, "s", "stackcommit" );
+	    } else {
+		FmtData.u.pe.stackcommit = value;
+	    }
+	}
+    }
+    return( ret );
 }
 
 bool ProcNameLen( void )
@@ -878,10 +1118,10 @@ bool ProcVFRemoval( void )
     return( TRUE );
 }
 
-bool ProcStart( void )
+bool ProcStart( void ) /* /ENTRY:symbol */
 /***************************/
 {
-    char	*name;
+    char *name;
 
     if( !GetToken( SEP_EQUALS, TOK_INCLUDE_DOT ) )
 	return( FALSE );
@@ -1116,8 +1356,7 @@ bool ProcEndLink( void )
     return( TRUE );
 }
 
-bool ProcStub( void )
-/**************************/
+bool ProcStub( void ) /* /STUB:filename */
 {
     char	*name;
     char	**nameptr;
@@ -1243,8 +1482,7 @@ static bool AddSymTrace( void )
     return( TRUE );
 }
 
-bool ProcSymTrace( void )
-/******************************/
+bool ProcSymTrace( void ) /* /INCLUDE:symbol */
 {
     LinkFlags |= TRACE_FLAG;
     return( ProcArgList( &AddSymTrace, TOK_INCLUDE_DOT ) );

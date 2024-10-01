@@ -40,3 +40,4 @@ extern void             SetupFakeModule( void );
 extern void             LinkFakeModule( void );
 extern void             ProcLocalImports( void );
 extern void             FreeLocalImports( void );
+extern bool             AddManifestFile( void );

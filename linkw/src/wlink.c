@@ -252,6 +252,7 @@ static void DoLink( char *cmdline )
     ProcLocalImports();
     DecideFormat();
     SetFormat();
+    AddManifestFile();
     ConvertLazyRefs();
     SetSegments();
     CheckErr();

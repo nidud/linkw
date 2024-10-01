@@ -365,15 +365,25 @@ bool ProcOldLibrary( void )
 bool ProcOS2HeapSize( void )
 /*********************************/
 {
-    ord_state           ret;
-    unsigned_32         value;
+    ord_state       ret;
+    unsigned_32     value;
 
-    if( !HaveEquals(0) ) return( FALSE );
+    if ( !HaveEquals(0) ) return( FALSE );
     ret = getatol( &value );
     if( ret != ST_IS_ORDINAL || value == 0 ) {
         LnkMsg( LOC+LINE+WRN+MSG_VALUE_INCORRECT, "s", "heapsize" );
     } else {
         FmtData.u.os2.heapsize = value;
+    }
+    if ( ( CmdFlags & CF_MSLINK ) ) {
+        if ( GetToken( SEP_COMMA, 0 ) ) {
+            ret = getatol( &value );
+            if ( ret != ST_IS_ORDINAL || value == 0 ) {
+                LnkMsg( LOC+LINE+WRN+MSG_VALUE_INCORRECT, "s", "heapcommit" );
+            } else {
+                FmtData.u.pe.heapcommit = value;
+            }
+        }
     }
     return( TRUE );
 }
@@ -514,15 +524,11 @@ bool ProcPE( void )
 /************************/
 {
     ProcOne( NTFormatKeywords, SEP_NO, FALSE );
-    FmtData.u.pe.heapcommit = 4*1024;   // arbitrary non-zero default.
-#if 1  //JWLink: default heapsize and stacksize for PE
-    FmtData.u.pe.os2.heapsize = 0x100000;
+    FmtData.u.pe.heapcommit = 4*1024; /* arbitrary non-zero default. */
+    FmtData.u.pe.os2.heapsize = 0x100000; /* JWLink: default heapsize and stacksize for PE */
     StackSize = 0x100000;
-#else
-    FmtData.u.pe.os2.heapsize = 8*1024; // another arbitrary non-zero default
-#endif
     FmtData.u.pe.stackcommit = PE_DEF_STACK_COMMIT;
-    FmtData.u.pe.os2.segment_shift = 9;    // 512 byte arbitrary rounding
+    FmtData.u.pe.os2.segment_shift = 9; /* 512 byte arbitrary rounding */
     return( TRUE );
 }
 

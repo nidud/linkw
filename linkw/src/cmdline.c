@@ -114,6 +114,8 @@ file_list	**CurrFList;
 tok		Token;
 commandflag	CmdFlags;
 char		*Name;
+char		*Manifestdependency;
+char		*ManifestFile;
 sysblock	*SysBlocks;
 sysblock	*LinkCommands;
 
@@ -146,6 +148,8 @@ static void ResetCmdFile( void )
     SysBlocks = NULL;
     Extension = E_LOAD;
     Name = NULL;
+    Manifestdependency = NULL;
+    ManifestFile = NULL;
     CmdFlags = CF_UNNAMED;
     Path = NULL;
     memset( &FmtData, 0, sizeof(FmtData) );
@@ -1029,7 +1033,7 @@ bool ProcAlignment( void )
     return( TRUE );
 }
 
-bool ProcHeapSize( void )
+bool ProcHeapSize( void ) /* /HEAP:reserve[,commit] */
 /******************************/
 {
 #if defined( __QNX__ )

@@ -457,9 +457,8 @@ void GetStartAddr( void )
 	return;
 
     /* jwlink: start symbol "_start" in ELF */
-    if( StartInfo.type == START_UNDEFED && ( FmtData.type & MK_ELF ) ) {
-	SetStartSym( "_start" );
-    }
+    if ( StartInfo.type == START_UNDEFED && FmtData.type == MK_ELF )
+	    SetStartSym( "_start" );
 
     addoff = TRUE;
     switch( StartInfo.type ) {

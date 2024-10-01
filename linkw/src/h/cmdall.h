@@ -32,6 +32,18 @@
 
 /* parse tables used in CMDALL.C */
 
+extern bool     ProcLargeAddr( void ); /* /LARGEADDRESSAWARE[:NO] */
+extern bool     ProcMachine( void ); /* /MACHINE:{X64|X86} */
+extern bool     ProcMachineX86( void );
+extern bool     ProcMachineX64( void );
+extern bool     ProcManifest( void ); /* /MANIFEST[:{EMBED[,ID=resource_id]|NO}] */
+extern bool     ProcManifestFile( void ); /* /MANIFESTFILE:filename */
+extern bool     ProcManDependency( void ); /* /MANIFESTDEPENDENCY:manifest_dependency */
+extern bool     ProcMerge( void ); /* /MERGE:from=to */
+extern bool     ProcSubsystem( void ); /* /SUBSYSTEM:{CONSOLE|WINDOWS} */
+extern bool     ProcSubsysConsole( void );
+extern bool     ProcSubsysWindows( void );
+
 extern bool     ProcLine( void );
 extern bool     ProcType( void );
 extern bool     ProcLocal( void );
@@ -56,6 +68,7 @@ extern bool     ProcModFiles( void );
 extern bool     ProcLibrary( void );
 extern bool     ProcOptLib( void );
 extern bool     ProcName( void );
+
 extern bool     ProcOptions( void );
 extern bool     ProcDebug( void );
 extern bool     ProcSystem( void );

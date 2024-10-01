@@ -28,6 +28,7 @@
 *
 ****************************************************************************/
 
+extern void     ProcInitPE( void );
 
 extern bool     ProcCommit( void );
 extern bool     ProcAnonExport( void );

@@ -584,7 +584,7 @@ static void ParseOneLine( char *c )
                     start = buff;
                     eatwhite( start );
                     c = GetString( start, file, TRUE, FALSE );
-                    if ( c == start )
+                    if ( c == start || *start == ';' )
                         continue;
 
                     if ( memicmp( file, "LIBRARY", 8 ) == 0 ) {
