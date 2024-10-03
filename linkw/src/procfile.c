@@ -744,34 +744,6 @@ void ResolveUndefined( void )
 	InitModTable();
     }
 
-    if ( StartInfo.type == START_UNDEFED && FmtData.type == MK_PE ) {
-	if ( FmtData.u.pe.subsystem == PE_SS_WINDOWS_GUI ) {
-	    if ( FmtData.u.pe.win64 == 0 ) {
-		if ( FindISymbol( "_WinMain@16" ) || FindISymbol( "_WinMainCRTStartup" ) )
-		    SetStartSym( "_WinMainCRTStartup" );
-		else if ( FindISymbol( "_wWinMain@16" ) || FindISymbol( "_wWinMainCRTStartup" ) )
-		    SetStartSym( "_wWinMainCRTStartup" );
-	    } else {
-		if ( FindISymbol( "WinMain" ) || FindISymbol( "WinMainCRTStartup" ) )
-		    SetStartSym( "WinMainCRTStartup" );
-		else if ( FindISymbol( "wWinMain" ) || FindISymbol( "wWinMainCRTStartup" ) )
-		    SetStartSym( "wWinMainCRTStartup" );
-	    }
-	} else {
-	    if ( FmtData.u.pe.win64 == 0 ) {
-		if ( FindISymbol( "_main" ) || FindISymbol( "_mainCRTStartup" ) )
-		    SetStartSym( "_mainCRTStartup" );
-		else if ( FindISymbol( "_wmain" ) || FindISymbol( "_wmainCRTStartup" ) )
-		    SetStartSym( "_wmainCRTStartup" );
-	    } else {
-		if ( FindISymbol( "main" ) || FindISymbol( "mainCRTStartup" ) )
-		    SetStartSym( "mainCRTStartup" );
-		else if ( FindISymbol( "wmain" ) || FindISymbol( "wmainCRTStartup" ) )
-		    SetStartSym( "wmainCRTStartup" );
-	    }
-	}
-    }
-
 scan_again:
     CurrSect = Root;
     ResolveVFExtdefs();

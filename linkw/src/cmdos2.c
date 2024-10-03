@@ -1178,7 +1178,10 @@ bool ProcHX( void )
 bool ProcNXCompat( void )
 /*************************/
 {
-    FmtData.u.pe.nxcompat = TRUE;
+    if ( GetToken( SEP_COLON, 0 ) ) /* /NXCOMPAT[:NO] */
+        FmtData.u.pe.nxcompat = FALSE;
+    else
+        FmtData.u.pe.nxcompat = TRUE;
     return( TRUE );
 }
 

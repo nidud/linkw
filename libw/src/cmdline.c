@@ -393,12 +393,15 @@ static char *ParseOption( char *c, char *buff )
             SetPageSize( page_size );
         }
         break;
-    case 'n': //                       (always create a new library)
+    case 'n': // (always create a new library)
         if ( memicmp( c, "OLOGO", 5 ) == 0 ) {
-            c+=5;
+            c += 5;
             Options.quiet = 1;
-        }
-        Options.new_library = 1;
+        } else if ( memicmp( c, "ODEC", 4 ) == 0 ) {
+            c += 4;
+            Options.no_underscore = 1;
+        } else
+            Options.new_library = 1;
         break;
     case 's':
         Options.strip_line = 1;
@@ -599,7 +602,7 @@ static void ParseOneLine( char *c )
                     } else if ( path[0] == '\0' )
                         FatalError( ERR_NO_EXPORTS, p );
                     strcpy( buff, "++" );
-                    if ( Options.processor != WL_PROC_AMD64 )
+                    if ( Options.processor != WL_PROC_AMD64 && !Options.no_underscore )
                         strcat( buff, "_" );
                     strcat( buff, file );
                     strcat( buff, ".\'" );

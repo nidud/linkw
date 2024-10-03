@@ -116,6 +116,7 @@ commandflag	CmdFlags;
 char		*Name;
 char		*Manifestdependency;
 char		*ManifestFile;
+char		*DefFile;
 sysblock	*SysBlocks;
 sysblock	*LinkCommands;
 
@@ -150,6 +151,7 @@ static void ResetCmdFile( void )
     Name = NULL;
     Manifestdependency = NULL;
     ManifestFile = NULL;
+    DefFile = NULL;
     CmdFlags = CF_UNNAMED;
     Path = NULL;
     memset( &FmtData, 0, sizeof(FmtData) );
@@ -459,8 +461,8 @@ static void DisplayOptions( void )
 
     WriteGenHelp();
     for ( i = 0; i < NUMHTOPICS; i += 2 ) {
-	if ( i && ( CmdFlags & CF_TO_STDOUT ) )
-	    PressKey();
+//	if ( i && ( CmdFlags & CF_TO_STDOUT ) )
+//	    PressKey();
 	WriteHelp( htopics[i], htopics[i+1], CmdFlags & CF_TO_STDOUT );
     }
 }

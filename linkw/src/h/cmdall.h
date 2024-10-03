@@ -32,6 +32,7 @@
 
 /* parse tables used in CMDALL.C */
 
+extern bool     ProcDef( void ); /* /DEF:filename */
 extern bool     ProcLargeAddr( void ); /* /LARGEADDRESSAWARE[:NO] */
 extern bool     ProcMachine( void ); /* /MACHINE:{X64|X86} */
 extern bool     ProcMachineX86( void );
@@ -150,4 +151,6 @@ extern bool     ProcOrdSegCopy( void );
 extern bool     ProcOrdSegNoEmit( void );
 extern void     ResetCmdAll( void );
 
-extern sysblock *       FindSysBlock( char * );
+extern sysblock *FindSysBlock( char * );
+extern void GetLibWImports( void );
+extern void DefaultStart( void );

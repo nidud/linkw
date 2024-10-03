@@ -67,7 +67,9 @@
 #include "permdata.h"
 #include "dllentry.h"
 #include "overlays.h"
+#include "command.h"
 
+extern char	*DefFile;
 seg_leader	*StackSegPtr;
 startinfo	StartInfo;
 
@@ -98,6 +100,7 @@ static void SetupImpLib( void );
 static void DoCVPack( void );
 static void FlushImpBuffer( void );
 static void ExecWlib( void );
+static void ExecLibW( void );
 static void WriteBuffer( char *info, unsigned long len, outfilelist *outfile,
 			 void *(*rtn)(void *, const void *, size_t) );
 static void BufImpWrite( char *buffer, unsigned len );
@@ -715,9 +718,22 @@ static void SetupImpLib( void )
 void BuildImpLib( void )
 /*****************************/
 {
-    if( LinkState & LINK_ERROR || ImpLib.handle == NIL_HANDLE
-				|| !FmtData.make_implib )
+    if ( LinkState & LINK_ERROR )
 	return;
+
+    if ( DefFile != NULL ) {
+
+	ExecLibW();
+	if ( CmdFlags & CF_NEW_DEFFILE ) {
+	    QDelete( DefFile );
+	    CmdFlags &= ~CF_NEW_DEFFILE;
+	    _LnkFree( DefFile );
+	    DefFile = NULL;
+	}
+    }
+    if ( ImpLib.handle == NIL_HANDLE || !FmtData.make_implib )
+	return;
+
     DEBUG(( DBG_OLD, "BuildImpLib(): Implib fname=%s", ImpLib.fname ));
     if( ImpLib.bufsize > 0 ) {
 	FlushImpBuffer();
@@ -784,6 +800,26 @@ static void ExecWlib( void )
 #else
 #define WLIB_EXE "libw.exe"
 #endif
+
+static void ExecLibW( void )
+{
+    char *p;
+    char mac[32];
+    char name[256];
+
+    p = strrchr( strcpy( name, DefFile ), '.' );
+    if ( p != NULL )
+	strcpy( p, ".lib" );
+    else
+	strcat( name, ".lib" );
+    strcpy( mac, "/MACHINE:" );
+    if ( FmtData.u.pe.win64 )
+	strcat( mac, "x64");
+    else
+	strcat( mac, "x86");
+    if ( spawnlp( P_WAIT, WLIB_EXE, WLIB_EXE, "/NODEC", "/NOLOGO", mac, "/OUT:", name, "/DEF:", DefFile, NULL ) == -1 )
+	PrintIOError( ERR+MSG_CANT_EXECUTE, "12", WLIB_EXE );
+}
 
 static void ExecWlib( void )
 /**************************/

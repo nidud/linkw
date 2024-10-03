@@ -94,6 +94,7 @@ typedef struct {
     unsigned        elf_found        :1; // if elf objects found
     // internal options
     unsigned        terse_listing    :1; // -tl switch
+    unsigned        no_underscore    :1; // -a switch
 
     processor_type  processor;
     file_type       filetype;

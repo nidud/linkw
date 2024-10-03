@@ -111,6 +111,7 @@ typedef enum commandflag {
     CF_NO_EXTENSION     = 0x00020000,  // don't put an extension on exe name
     CF_MSLINK           = 0x00040000,
     CF_ADD_MANIFESTFILE = 0x00080000,
+    CF_NEW_DEFFILE      = 0x00100000,
 } commandflag;
 
 typedef struct cmdfilelist {
@@ -197,6 +198,7 @@ extern commandflag  CmdFlags;
 extern char         *Name;
 extern char         *Manifestdependency;
 extern char         *ManifestFile;
+extern char         *DefFile;
 extern sysblock     *SysBlocks;
 extern sysblock     *LinkCommands;
 extern cmdfilelist *CmdFile;

@@ -242,6 +242,8 @@ static void DoLink( char *cmdline )
     ProcObjFiles(); /* ObjPass1 */
     CheckErr();
     DoDefaultSystem();
+    GetLibWImports();
+    DefaultStart();
     if( LinkState & LIBRARIES_ADDED ) {
 	FindLibPaths();
 	LinkState |= SEARCHING_LIBRARIES;
