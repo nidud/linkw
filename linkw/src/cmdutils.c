@@ -265,13 +265,7 @@ bool ProcOne( parse_entry *entry, sep_type req, bool suicide )
 
     } else if ( entry->flags & CF_MSLINK && CmdFlags & CF_MSLINK ) {
 
-        ptr = memchr( tcp, '.', len );
-        if ( ptr && memicmp( ptr, ".lib", 4 ) == 0 ) {
-            AddLib();
-        } else {
-            ProcFiles();
-            CmdFlags &= ~CF_MSLINK;
-        }
+        ProcFiles();
         CmdFlags |= CF_HAVE_FILES;
         return( TRUE );
 

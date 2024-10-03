@@ -194,7 +194,6 @@ void GetLibWImports( void )
         DefFile = memcpy( p, def, len + 1 );
     }
     Token.locked = FALSE;
-    RestoreCmdLine();
 }
 
 bool ProcDef( void )
@@ -860,25 +859,6 @@ static bool AddFile( void )
     return( TRUE );
 }
 
-bool ProcFiles( void )
-/***************************/
-/* process FILE command */
-{
-    if( (LinkFlags & (DWARF_DBI_FLAG|OLD_DBI_FLAG | NOVELL_DBI_FLAG) ) == 0 ) {
-        CmdFlags |= CF_FILES_BEFORE_DBI;
-    }
-    if ( CmdFlags & CF_MSLINK )
-        return( ProcArgSPList( &AddFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
-    return( ProcArgList( &AddFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
-}
-
-bool ProcModFiles( void )
-/***************************/
-{
-    return( ProcArgList( &AddModFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
-}
-
-
 bool AddLib( void )
 /************************/
 {
@@ -903,6 +883,32 @@ bool AddLib( void )
     _LnkFree( ptr );
     return( TRUE );
 }
+
+static bool AddFileEx( void )
+{
+    if ( Token.len > 4 && memicmp( Token.this + Token.len - 4, ".lib", 4 ) == 0 )
+        return AddLib();
+    return AddFile();
+}
+
+bool ProcFiles( void )
+/***************************/
+/* process FILE command */
+{
+    if( (LinkFlags & (DWARF_DBI_FLAG|OLD_DBI_FLAG | NOVELL_DBI_FLAG) ) == 0 ) {
+        CmdFlags |= CF_FILES_BEFORE_DBI;
+    }
+    if ( CmdFlags & CF_MSLINK )
+        return( ProcArgSPList( &AddFileEx, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
+    return( ProcArgList( &AddFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
+}
+
+bool ProcModFiles( void )
+/***************************/
+{
+    return( ProcArgList( &AddModFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
+}
+
 
 bool ProcLibrary( void )
 /*****************************/
