@@ -36,7 +36,7 @@
 
 #define LINKID14 0x01018548
 #define LINKID12 0x00DD2775
-#define MSLINKID LINKID12
+#define MSLINKID LINKID14
 
 //IMPORT_DESCRIPT optional header
 
@@ -249,6 +249,19 @@ static void WriteCoffStringTable( libfile io, coff_lib_file *c_file )
     LibWrite( io, c_file->string_table, c_file->string_table_size - 4 );
 }
 
+static void WriteMSLINKSection( libfile io, char *dllName, unsigned dll_name_len )
+{
+    char buffer[16];
+
+    memset( buffer, 0 , 16 );
+    buffer[0] = 2;
+    buffer[4] = dll_name_len+7;
+    buffer[6] = 9;
+    buffer[12] = dll_name_len;
+    LibWrite( io, buffer, 13 );
+    LibWrite( io, dllName, dll_name_len );
+    LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
+}
 
 void CoffWriteImport( libfile io, sym_file *sfile )
 {
@@ -371,12 +384,8 @@ void CoffWriteImport( libfile io, sym_file *sfile )
             LibWrite( io, CoffImportDescriptorHeader, 0xe0 );
 
         WriteCoffSections( io, &c_file );
-        if ( Options.processor == WL_PROC_AMD64 ) {
-            LibWrite( io, "\x02\x00\x00\x00\x11\x00\x09\x00\x00\x00\x00\x00", 12 );
-            LibWrite( io, &dll_name_len, 1 );
-            LibWrite( io, dllName, dll_name_len );
-            LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
-        }
+        if ( Options.processor == WL_PROC_AMD64 )
+            WriteMSLINKSection( io, dllName, dll_name_len );
         memset( buffer, 0, 0x14 );
         LibWrite( io, buffer, 0x14 );
         if ( Options.processor == WL_PROC_AMD64 ) {
@@ -407,12 +416,8 @@ void CoffWriteImport( libfile io, sym_file *sfile )
         }
         WriteCoffFileHeader( io, &c_file );
         WriteCoffSections( io, &c_file );
-        if ( Options.processor == WL_PROC_AMD64 ) {
-            LibWrite( io, "\x02\x00\x00\x00\x11\x00\x09\x00\x00\x00\x00\x00", 12 );
-            LibWrite( io, &dll_name_len, 1 );
-            LibWrite( io, dllName, dll_name_len );
-            LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
-        }
+        if ( Options.processor == WL_PROC_AMD64 )
+            WriteMSLINKSection( io, dllName, dll_name_len );
         memset( buffer, 0 , 0x14 );
         LibWrite( io, buffer, 0x14 );
         break;
@@ -440,10 +445,7 @@ void CoffWriteImport( libfile io, sym_file *sfile )
         WriteCoffSections( io, &c_file );
         memset( buffer, 0 , 16 );
         if ( Options.processor == WL_PROC_AMD64 ) {
-            LibWrite( io, "\x02\x00\x00\x00\x11\x00\x09\x00\x00\x00\x00\x00", 12 );
-            LibWrite( io, &dll_name_len, 1 );
-            LibWrite( io, dllName, dll_name_len );
-            LibWrite( io, "\x27\x00\x13\x10\x07\x00\x00\x00\xD0\x00\x00\x00\x00\x00\x00\x00\x0E\x00\x29\x00\x48\x85\x12Microsoft (R) LINK", 41 );
+            WriteMSLINKSection( io, dllName, dll_name_len );
             LibWrite( io, buffer, 16 );
         } else
             LibWrite( io, buffer, 8 );
