@@ -42,3 +42,6 @@
 #include "ovlstruc.h"
 #include "globals.h"
 #include "linkutil.h"
+
+#define INIT_FILE_NAME "linkw.lnk"
+#define INIT_FILE_ENV  "LINKW_LNK"

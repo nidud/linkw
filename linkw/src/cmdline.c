@@ -120,14 +120,16 @@ char		*DefFile;
 sysblock	*SysBlocks;
 sysblock	*LinkCommands;
 
-static sysblock		*PrevCommand;
+static sysblock *PrevCommand;
 
 //#define INIT_FILE_NAME  "wlink.lnk"
 //#define INIT_FILE_ENV	  "WLINK_LNK"
 //#define INIT_FILE_NAME  "jwlink.lnk"
 //#define INIT_FILE_ENV	 "JWLINK_LNK"
-#define INIT_FILE_NAME	"linkw.cfg"
-#define INIT_FILE_ENV	"LINKW_CFG"
+//#define INIT_FILE_NAME "linkw.cfg"
+//#define INIT_FILE_ENV "LINKW_CFG"
+//#define INIT_FILE_NAME "linkw.lnk" - moved to linkstd.h
+//#define INIT_FILE_ENV "LINKW_LNK"
 
 void InitCmdFile( void )
 /******************************/
