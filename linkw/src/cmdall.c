@@ -68,29 +68,27 @@ void DefaultStart( void )
             } else if ( FindISymbol( "DllMain" ) || FindISymbol( "_DllMainCRTStartup" ) ) {
                 SetStartSym( "_DllMainCRTStartup" );
             }
-        } else if ( FmtData.u.pe.subsystem == PE_SS_WINDOWS_GUI ) {
-            if ( FmtData.u.pe.win64 == 0 ) {
-                if ( FindISymbol( "_WinMain@16" ) || FindISymbol( "_WinMainCRTStartup" ) )
-                    SetStartSym( "_WinMainCRTStartup" );
-                else if ( FindISymbol( "_wWinMain@16" ) || FindISymbol( "_wWinMainCRTStartup" ) )
-                    SetStartSym( "_wWinMainCRTStartup" );
-            } else {
-                if ( FindISymbol( "WinMain" ) || FindISymbol( "WinMainCRTStartup" ) )
-                    SetStartSym( "WinMainCRTStartup" );
-                else if ( FindISymbol( "wWinMain" ) || FindISymbol( "wWinMainCRTStartup" ) )
-                    SetStartSym( "wWinMainCRTStartup" );
-            }
         } else {
             if ( FmtData.u.pe.win64 == 0 ) {
+                ProcMachineX86();
                 if ( FindISymbol( "_main" ) || FindISymbol( "_mainCRTStartup" ) )
                     SetStartSym( "_mainCRTStartup" );
                 else if ( FindISymbol( "_wmain" ) || FindISymbol( "_wmainCRTStartup" ) )
                     SetStartSym( "_wmainCRTStartup" );
+                else if ( FindISymbol( "_WinMain@16" ) || FindISymbol( "_WinMainCRTStartup" ) )
+                    SetStartSym( "_WinMainCRTStartup" );
+                else if ( FindISymbol( "_wWinMain@16" ) || FindISymbol( "_wWinMainCRTStartup" ) )
+                    SetStartSym( "_wWinMainCRTStartup" );
             } else {
+                ProcMachineX64();
                 if ( FindISymbol( "main" ) || FindISymbol( "mainCRTStartup" ) )
                     SetStartSym( "mainCRTStartup" );
                 else if ( FindISymbol( "wmain" ) || FindISymbol( "wmainCRTStartup" ) )
                     SetStartSym( "wmainCRTStartup" );
+                else if ( FindISymbol( "WinMain" ) || FindISymbol( "WinMainCRTStartup" ) )
+                    SetStartSym( "WinMainCRTStartup" );
+                else if ( FindISymbol( "wWinMain" ) || FindISymbol( "wWinMainCRTStartup" ) )
+                    SetStartSym( "wWinMainCRTStartup" );
             }
         }
     }
@@ -260,11 +258,16 @@ static void AddMachineLib( char *directory )
 {
     char path[PATH_MAX];
 
-    if ( GetLibPath( path ) ) {
+    if ( !( CmdFlags & CF_ASMCDIR_ADDED ) ) {
 
-        strcat( path, "\\" );
-        strcat( path, directory );
-        AddLibPaths( path, strlen(path), FALSE ); // TRUE == add to front.
+        CmdFlags |= CF_ASMCDIR_ADDED;
+
+        if ( GetLibPath( path ) ) {
+
+            strcat( path, "\\" );
+            strcat( path, directory );
+            AddLibPaths( path, strlen(path), FALSE ); // TRUE == add to front.
+        }
     }
 }
 

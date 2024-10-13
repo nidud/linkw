@@ -821,6 +821,8 @@ void SetCommandFile( f_handle file, char *fname )
 {
     unsigned long   size;
     char            *buff;
+    char            *p;
+    char            *q;
 
     if( QIsDevice( file ) ) {
         size = 0x10000;
@@ -833,6 +835,17 @@ void SetCommandFile( f_handle file, char *fname )
         if( buff != NULL ) {
             size = QRead( file, buff, size, fname );
             *(buff + size) = '\0';
+            /* if Unicode file */
+            if ( buff[0] == 0xFF && buff[1] == 0xFE ) {
+                p = buff;
+                p += 2;
+                size = ((size / 2) - 2);
+                for (q = buff; size; size--) {
+                    *q++ = *p++;
+                    p++;
+                }
+                *q = '\0';
+            }
             NewCommandSource( fname, buff, BUFFERED );
         }
     }

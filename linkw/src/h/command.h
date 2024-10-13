@@ -112,6 +112,7 @@ typedef enum commandflag {
     CF_MSLINK           = 0x00040000,
     CF_ADD_MANIFESTFILE = 0x00080000,
     CF_NEW_DEFFILE      = 0x00100000,
+    CF_ASMCDIR_ADDED    = 0x00200000,
 } commandflag;
 
 typedef struct cmdfilelist {
