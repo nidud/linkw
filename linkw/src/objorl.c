@@ -419,16 +419,32 @@ static orl_return ManifestCmd( char *name, void *dummy )
     return( ORL_OKAY );
 }
 
+static orl_return IncludeCmd( char *name, void *dummy )
+{
+    symbol *sym;
+
+    dummy = dummy;
+
+    sym = SymOp( ST_CREATE | ST_REFERENCE, name, strlen(name) );
+    sym->info |= SYM_TRACE;
+    return( ORL_OKAY );
+}
+
+
 struct cmditem {
     const char *cmd;
     orl_return (*pfn)( char *, void * );
 };
+
+/* Valid options for LINK are /DEFAULTLIB, /EXPORT, /INCLUDE,
+   /MANIFESTDEPENDENCY, /MERGE, and /SECTION. */
 
 static const struct cmditem cmdtab[] = {
     { "defaultlib", DeflibCmd },
     { "entry"	  , EntryCmd  },
     { "export"	  , ExportCmd },
     { "import"	  , ImportCmd },
+    { "include"	  , IncludeCmd },
     { "manifestdependency", ManifestCmd },
 };
 #define NUMLNKCMDS ( sizeof( cmdtab ) / sizeof( cmdtab[0] ) )

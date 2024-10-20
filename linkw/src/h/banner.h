@@ -44,7 +44,7 @@
 //#define _BETA_		  _BANEXTRA
 //#endif
 
-#define CURR_YEAR	"2017"
+#define CURR_YEAR	"2024"
 
 #define banner1p1(p)  p
 #define banner1p2(v)  "Version " v
@@ -72,7 +72,7 @@
 #define _RC_DELIM_LEFT_		[
 #define _RC_DELIM_RIGHT_	]
 
-#define BAN_VER_STR "2.06"
+#define BAN_VER_STR "2.07"
 #define _WLINK_VERSION_		BAN_VER_STR
 
 
