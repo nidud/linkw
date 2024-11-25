@@ -994,6 +994,7 @@ bool ProcStack( void )
     ord_state       ord;
     unsigned_32     value;
 
+    ProcInitPE();
     LinkFlags |= STK_SIZE_FLAG;
     ret = GetLong( &StackSize );
     if ( ret && ( CmdFlags & CF_MSLINK ) ) {

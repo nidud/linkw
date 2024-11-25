@@ -368,6 +368,7 @@ bool ProcOS2HeapSize( void )
     ord_state       ret;
     unsigned_32     value;
 
+    ProcInitPE();
     if ( !HaveEquals(0) ) return( FALSE );
     ret = getatol( &value );
     if( ret != ST_IS_ORDINAL || value == 0 ) {
