@@ -1,0 +1,2 @@
+linkw:
+	mdchm -clean $@
