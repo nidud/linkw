@@ -351,6 +351,7 @@ static orl_reloc_type convertAMD64Reloc( elf_reloc_type elf_type )
         return( ORL_RELOC_TYPE_PLTREL_32 );
     case R_X86_64_32:
     case R_X86_64_32S:
+    case R_X86_64_RELATIVE:
         return( ORL_RELOC_TYPE_WORD_32 );
     case R_X86_64_64:
         return( ORL_RELOC_TYPE_WORD_64 );

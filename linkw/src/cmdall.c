@@ -91,6 +91,11 @@ void DefaultStart( void )
                     SetStartSym( "wWinMainCRTStartup" );
             }
         }
+    } else if ( StartInfo.type == START_UNDEFED && FmtData.type == MK_ELF ) {
+        if ( FindISymbol( "main" ) || FindISymbol( "_start" ) ) {
+            SetStartSym( "_start" );
+            StartInfo.type = START_UNDEFED;
+        }
     }
 }
 

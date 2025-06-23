@@ -24,11 +24,12 @@
 *
 *  ========================================================================
 *
-* Description:  Top level ELF loading code, parses ELF headers.
+* Description:	Top level ELF loading code, parses ELF headers.
 *
 ****************************************************************************/
 
 
+#include "debug.h"
 #include "elfload.h"
 
 // fixme: finish making ELF SPECIFIC (see next fixme)
@@ -543,7 +544,7 @@ orl_return ElfLoadFileStructure( elf_file_handle elf_file_hnd )
     orl_sec_offset	*name_index;
     char		*string_table;
 #ifdef __WATCOMC__
-    unsigned long long  shoff;
+    unsigned long long	shoff;
 #else
     unsigned __int64	shoff;
 #endif
@@ -554,13 +555,17 @@ orl_return ElfLoadFileStructure( elf_file_handle elf_file_hnd )
     e_hdr32 = _ClientRead( elf_file_hnd, sizeof( e_hdr32->e_ident ) );
     if( !(e_hdr32) )
 	return( ORL_ERROR );
+
     determine_file_class( elf_file_hnd, e_hdr32 );
-    _ClientSeek( elf_file_hnd, 0, SEEK_SET );
+
+    /* changed in v2.09 */
+    _ClientSeek( elf_file_hnd, -sizeof( e_hdr32->e_ident ), SEEK_CUR );
+
     if( elf_file_hnd->flags & ORL_FILE_FLAG_64BIT_MACHINE ) {
 	e_hdr64 = _ClientRead( elf_file_hnd, sizeof( Elf64_Ehdr ) );
 	if( !(e_hdr64) )
 	    return( ORL_ERROR );
-	fix_ehdr64_byte_order( elf_file_hnd, e_hdr64 );	       
+	fix_ehdr64_byte_order( elf_file_hnd, e_hdr64 );
 	shoff = e_hdr64->e_shoff;
 	shnum = e_hdr64->e_shnum;
 	ehsize = e_hdr64->e_ehsize;
@@ -579,13 +584,14 @@ orl_return ElfLoadFileStructure( elf_file_handle elf_file_hnd )
 	elf_file_hnd->shentsize = e_hdr32->e_shentsize;
 	determine_file_specs( elf_file_hnd, e_hdr32 );
     }
+
     elf_file_hnd->num_sections = shnum - 1; // -1 to ignore shdr table index
 
     contents_size1 = shoff - ehsize;
     sec_header_table_size = elf_file_hnd->shentsize * shnum;
 
     // e_ehsize might not be the same as sizeof(Elf32_Ehdr) (different versions)
-    _ClientSeek( elf_file_hnd, ehsize, SEEK_SET );
+    //_ClientSeek( elf_file_hnd, ehsize, SEEK_SET );
 
     if( contents_size1 > 0 ) {
 	elf_file_hnd->contents_buffer1 = _ClientRead( elf_file_hnd,

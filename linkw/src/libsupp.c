@@ -36,6 +36,7 @@
  */
 
 #include <string.h>
+
 #include "linkstd.h"
 #include "pcobj.h"
 #include "msg.h"
@@ -46,7 +47,6 @@
 #include "library.h"
 #include "procfile.h"
 
-
 static bool ProcLibFile( file_list *lib, char *name )
 /***************************************************/
 {
@@ -54,7 +54,6 @@ static bool ProcLibFile( file_list *lib, char *name )
     mod_entry **    prev;
     unsigned long   dummy;
 
-    DEBUG(( DBG_OLD, "ProcLibFile( %s ) enter, mod=%s, calling SearchLib()", name, CurrMod->name ));
     lp = SearchLib( lib, name );
     if( lp == NULL ) {
         CacheClose( lib, 1 );
@@ -76,7 +75,7 @@ static bool ProcLibFile( file_list *lib, char *name )
     CurrMod = lp;
     CurrMod->name = IdentifyObject( lp->f.source, &lp->location, &dummy );
     CurrMod->modinfo |= ObjFormat & FMT_OBJ_FMT_MASK;
-    DEBUG(( DBG_OLD, "ProcLibFile( %s ): symbol found in %s, modinfo=%h", name, CurrMod->name, CurrMod->modinfo ));
+
     ObjPass1();
     CacheClose( lp->f.source, 1 );
     if( FmtData.type & MK_OVERLAYS && FmtData.u.dos.distribute ) {
