@@ -29,6 +29,13 @@
 *
 ****************************************************************************/
 
+#ifdef DOUTP
+#include <stdio.h>
+#define DPRINT( x ) printf x ;
+#else
+#define DPRINT( x )
+#endif
+
 
 #define _ON             1
 #define _OFF            0

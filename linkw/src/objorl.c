@@ -885,6 +885,7 @@ static orl_return DoReloc( orl_reloc *reloc )
     skip = FALSE;
     istoc = FALSE;
     type = 0;
+    addend = 0; /* v2.10: moved */
     switch( reloc->type ) {
     case ORL_RELOC_TYPE_PAIR:
 	skip = TRUE;
@@ -925,9 +926,6 @@ static orl_return DoReloc( orl_reloc *reloc )
     case ORL_RELOC_TYPE_REL_24:
 	type = FIX_OFFSET_24 | FIX_REL;
 	break;
-    case ORL_RELOC_TYPE_REL_32:
-	type = FIX_OFFSET_32 | FIX_REL;
-	break;
     case ORL_RELOC_TYPE_REL_32_NOADJ:
 	type = FIX_OFFSET_32 | FIX_REL | FIX_NOADJ;
 	break;
@@ -967,6 +965,16 @@ static orl_return DoReloc( orl_reloc *reloc )
 	    type = FIX_HIGH_OFFSET_16;
 	}
 	break;
+    case ORL_RELOC_TYPE_PLT_32: /* v2.10: elf64 adjustment */
+    case ORL_RELOC_TYPE_REL_32:
+	type = FIX_OFFSET_32 | FIX_REL;
+	adjust = reloc->addend + 4;
+	if ( adjust && FmtData.u.elf.elf64 ) {
+	    addend = adjust;
+	    type |= FIX_REL_ELF64;
+	    DPRINT(( "32-bit PC-relative fixup %X at %X, adjust=%d\n", reloc->type, reloc->offset, adjust ));
+	}
+	break;
     case ORL_RELOC_TYPE_REL_32_ADJ1: /* jwlink */
     case ORL_RELOC_TYPE_REL_32_ADJ2: // relative ref to a 32-bit address, need special adjustment
     case ORL_RELOC_TYPE_REL_32_ADJ3:
@@ -990,13 +998,14 @@ static orl_return DoReloc( orl_reloc *reloc )
     if( !skip ) {
 	seg = FindSegNode( reloc->section );
 	DEBUG(( DBG_OLD, "DoReloc(): seg=%s", seg ? seg->entry->u.leader->segname : "NULL" ))
-	addend = 0;
+	//addend = 0;
 	if( seg != NULL && !(seg->info & SEG_DEAD) && seg->entry != NULL
 						   && !seg->entry->isdead ) {
 	    SetCurrSeg( seg->entry, 0, seg->contents );
 	    frame.type = FIX_FRAME_TARG;
 	    ext = FindExtHandle( reloc->symbol );
 	    if( ext == NULL ) {
+		addend = 0;
 		symseg = FindSegNode( ORLSymbolGetSecHandle(reloc->symbol) );
 		if( symseg != NULL && !(seg->info & SEG_DEAD) ) {
 		    addend = ORLSymbolGetValue( reloc->symbol );

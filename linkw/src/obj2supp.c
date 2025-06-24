@@ -65,6 +65,7 @@ typedef struct fix_data {
     byte *	data;
     unsigned_32 value;		    /* value at location being patched */
     unsigned_32 hvalue;		    /* jwlink: in case value is 64-bit */
+    signed_32	adjust;		    /* added v2.10: elf64 */
     targ_addr	loc_addr;
     targ_addr	tgt_addr;
     fix_type	type;
@@ -545,6 +546,10 @@ void StoreFixup( offset off, fix_type type, frame_spec *frame,
     if( ObjFormat & FMT_UNSAFE_FIXUPP ) {
 	save.flags |= FIX_UNSAFE;
     }
+    if ( type & FIX_REL_ELF64 ) {
+	save.adjust = addend;
+	addend = 0;
+    }
     size = CalcFixupSize( type );
     if( CurrRec.data != NULL ) {
 	memcpy( buff, CurrRec.data + off, size );
@@ -556,6 +561,7 @@ void StoreFixup( offset off, fix_type type, frame_spec *frame,
     if( ( type & ( FIX_OFFSET_MASK | FIX_HIGH ) ) == FIX_HIGH_OFFSET_16 ) {
 	addend += FixupOverflow << 16;
     }
+
     PatchOffset( &fix, addend, TRUE );
     if( MemIsZero( buff, size ) ) {
 	save.flags |= FIX_ADDEND_ZERO;
@@ -938,6 +944,8 @@ static bool CheckSpecials( fix_data *fix, frame_spec *targ )
 	 */
 	if ( FmtData.u.pe.win64 )
 	    off -= ( fix->type >> 28 );
+	else if ( fix->type & FIX_REL_ELF64 )
+	    off += fix->adjust;
 
     } else if( FmtData.type & ( MK_386 | MK_QNX ) ) {
 	off = fix->tgt_addr.off - fix->loc_addr.off;
@@ -1686,6 +1694,11 @@ static void Relocate( save_fixup *save, fix_data *fix, frame_spec *targ )
     shift = 0;
     datasize = CalcFixupSize( fix->type );
 
+    if ( fix->type & FIX_REL_ELF64 ) {
+
+	DPRINT(( "Relocate type=%X, offset=%d\n", fix->type, save->adjust ));
+	fix->adjust = save->adjust;
+    }
     fix->done = FALSE;
     fix->os2_selfrel = FALSE;
     fix->data = addbuf;

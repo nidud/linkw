@@ -70,6 +70,7 @@ typedef enum {
     FIX_FRAME_SHIFT     = 24,           // contains frame_type
     FIX_FRAME_MASK      = 0x07000000,
 
+    FIX_REL_ELF64       = 0x08000000,   /* v2.10: elf64 adjustment */
 
 // now for some handy constants which use these
 
@@ -113,6 +114,7 @@ typedef struct {
 typedef struct {
     unsigned_32 flags;
     unsigned_32 off;
+    signed_32   adjust; /* added v2.10 */
     void *      target;
 } save_fixup;
 
