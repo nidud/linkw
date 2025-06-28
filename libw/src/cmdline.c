@@ -143,6 +143,9 @@ static char *ParseOption( char *c, char *buff )
     case 'd': // = <object_output_directory>
         if ( my_tolower( *c ) == 'e' ) {
             c = GetEqual( c+2, buff, NULL, &Options.def_file );
+            Options.coff_found = 1;
+            Options.libtype = WL_LTYPE_AR;
+            Options.ar_libformat = AR_FMT_COFF;
         } else {
             if( Options.output_directory ) {
                 DuplicateOption( start );
@@ -273,9 +276,6 @@ static char *ParseOption( char *c, char *buff )
             Options.no_backup = 1;
             if( Options.libtype != WL_LTYPE_NONE )
                 DuplicateOption( start );
-            Options.ar_libformat = AR_FMT_COFF;
-            Options.libtype = WL_LTYPE_AR;
-            Options.coff_found = 1;
         } else {
             if( Options.output_name )
                 DuplicateOption( start );
