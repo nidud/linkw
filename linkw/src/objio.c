@@ -149,10 +149,17 @@ static f_handle PathObjOpen( char * path_ptr, char *name, char *new_name,
 static f_handle TrySearchingLib( char *name, char *new_name, infilelist *list )
 /*****************************************************************************/
 {
-    f_handle            fp;
+    f_handle fp;
+    path_entry *searchpath;
 
     fp = NIL_HANDLE;
-    if( list->flags & INSTAT_USE_LIBPATH ) {
+    if ( list->flags & INSTAT_USE_LIBPATH ) {
+        if ( list->path_list != LibPath ) { /* added v2.11 */
+            for ( searchpath = LibPath ; searchpath ; searchpath = searchpath->next ) {
+                if ( ( fp = PathObjOpen( searchpath->name, name, new_name, list ) ) != NIL_HANDLE )
+                    return( fp );
+            }
+        }
         fp = PathObjOpen( GetEnvString("LIB"), name, new_name, list );
     }
     return fp;

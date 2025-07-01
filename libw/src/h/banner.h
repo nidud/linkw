@@ -49,7 +49,7 @@
 #define banner1p1(p)  p
 #define banner1p2(v)  "Version " v
 #define banner1(p,v) banner1p1(p) " " banner1p2(v)
-#define banner1w(p,v) "LIBW " banner1p1(p) " " banner1p2(v)
+#define banner1w(p,v) "Asmc " banner1p1(p) " " banner1p2(v)
 
 #define banner2p1(year) "Portions Copyright (c) " year "-2002 Sybase, Inc. All Rights Reserved"
 //#define banner2p2() "All rights reserved"

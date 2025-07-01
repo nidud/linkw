@@ -52,6 +52,8 @@ typedef enum exe_format {       // there is a corresp. table in MSG.C
     MK_RAW              = 0x00080000
 } exe_format;
 
+#define MK_EX       (MK_PE | MK_ELF | MK_DOS_EXE)
+
 #define MK_DOS       (MK_OVERLAYS | MK_DOS_EXE | MK_COM)
 #define MK_ONLY_OS2_16  MK_OS2_NE
 #define MK_OS2_FLAT  (MK_OS2_LE | MK_OS2_LX | MK_WIN_VXD)

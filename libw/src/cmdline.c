@@ -262,6 +262,17 @@ static char *ParseOption( char *c, char *buff )
                     Options.processor = WL_PROC_AMD64;
                     c += 3;
                     break;
+                } else if ( memicmp( c, "dos", 3 ) == 0 ) {
+                    if( Options.filetype != WL_FTYPE_NONE )
+                        DuplicateOption( start );
+                    Options.filetype = WL_FTYPE_OMF;
+                    Options.libtype = WL_LTYPE_OMF;
+                    Options.omf_found = 1;
+                    Options.new_library = 1;
+                    Options.no_backup = 1;
+                    Options.respect_case = 1;
+                    c += 3;
+                    break;
                 }
             }
             c = start;
@@ -271,11 +282,17 @@ static char *ParseOption( char *c, char *buff )
         break;
     case 'o': // = <out_library_name>
         if ( memicmp( c, "UT", 2 ) == 0 ) {
-            c = GetEqual( c+2, buff, EXT_LIB, &Options.input_name );
-            Options.new_library = 1;
-            Options.no_backup = 1;
-            if( Options.libtype != WL_LTYPE_NONE )
-                DuplicateOption( start );
+            if ( Options.filetype == WL_FTYPE_OMF ) {
+                if( Options.output_name )
+                    DuplicateOption( start );
+                c = GetEqual( c+2, buff, EXT_LIB, &Options.output_name );
+            } else {
+                c = GetEqual( c+2, buff, EXT_LIB, &Options.input_name );
+                Options.new_library = 1;
+                Options.no_backup = 1;
+                if( Options.libtype != WL_LTYPE_NONE )
+                    DuplicateOption( start );
+            }
         } else {
             if( Options.output_name )
                 DuplicateOption( start );

@@ -74,6 +74,14 @@ void ResetMsg( void )
     LocRec = 0;
     MsgArgInfo.index = -1;
     memset( MsgFlags, 0xFF, MSG_ARRAY_SIZE );
+
+    if ( !( MapFlags & MAP_VERBOSE ) ) {
+
+        ClearBit( MsgFlags, MSG_LOADING_OBJECT );
+        ClearBit( MsgFlags, MSG_SEARCHING_LIBS );
+        ClearBit( MsgFlags, MSG_CREATE_MAP );
+        //ClearBit( MsgFlags, MSG_CREATE_EXE );
+    }
 }
 
 unsigned FmtStr( char *buff, unsigned len, char *fmt, ... )
@@ -602,10 +610,12 @@ void WLPrtBanner( void )
     if( !BannerPrinted ) {
         msg = MsgStrings[ PRODUCT ];
         WriteInfoStdOut( msg, BANNER, NULL );
+//        msg = MsgStrings[ COPYRIGHT1 ];
+//        WriteInfoStdOut( msg, BANNER, NULL );
         msg = MsgStrings[ COPYRIGHT ];
         WriteInfoStdOut( msg, BANNER, NULL );
-        msg = MsgStrings[ TRADEMARK ];
-        WriteInfoStdOut( msg, BANNER, NULL );
+//        msg = MsgStrings[ TRADEMARK ];
+//        WriteInfoStdOut( msg, BANNER, NULL );
         //msg = MsgStrings[ TRADEMARK2 ];
         //WriteInfoStdOut( msg, BANNER, NULL );
         BannerPrinted = TRUE;

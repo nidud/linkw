@@ -88,50 +88,54 @@ parse_entry     SortOptions[] = {
 
 
 parse_entry     Machines[] = { /* /MACHINE:{X64|X86} */
-    "X86",          &ProcMachineX86,    MK_PE, 0,
-    "X64",          &ProcMachineX64,    MK_PE, 0,
+    "X86",          &ProcMachineX86,    MK_PE | MK_ELF, 0,
+    "X64",          &ProcMachineX64,    MK_PE | MK_ELF, 0,
+    "DOS",          &ProcMachineDOS,    MK_DOS, 0,
     NULL
 };
 
-parse_entry     Subsystems[] = { /* /SUBSYSTEM:{CONSOLE|WINDOWS} */
-    "CONSOLE",      &ProcSubsysConsole, MK_PE, 0,
-    "WINDOWS",      &ProcSubsysWindows, MK_PE, 0,
+parse_entry     Subsystems[] = { /* /SUBSYSTEM:{CONSOLE|WINDOWS|LINUX|DOS} */
+    "Console",      &ProcSubsysConsole, MK_PE, 0,
+    "Windows",      &ProcSubsysWindows, MK_PE, 0,
+    "Dos",          &ProcDos,           MK_DOS, 0,
+    "Linux",        &ProcSubsysLinux,   MK_ELF, 0,
     NULL
 };
 
 parse_entry     Directives[] = {
 
-    "ALIGN",                &ProcAlignment,     MK_PE, CF_MSLINK,
-    "BASE",                 &ProcOffset,        MK_PE, CF_MSLINK,
+    "Align",                &ProcAlignment,     MK_PE, CF_MSLINK,
+    "Base",                 &ProcOffset,        MK_PE, CF_MSLINK,
     "DEF",                  &ProcDef,           MK_PE, CF_MSLINK,
-    "DEFAULTLIB",           &ProcLibrary,       MK_PE, CF_MSLINK,
+    "Defaultlib",           &ProcLibrary,       MK_EX, CF_MSLINK,
     "DLL",                  &ProcOS2DLL,        MK_PE, CF_MSLINK,
-    "ENTRY",                &ProcStart,         MK_PE, CF_MSLINK,
-    "EXPORT",               &ProcExport,        MK_PE, CF_MSLINK|CF_AFTER_INC,
+    "Entry",                &ProcStart,         MK_PE, CF_MSLINK,
+    "EXport",               &ProcExport,        MK_PE, CF_MSLINK|CF_AFTER_INC,
     "FILEALIGN",            &ProcObjAlign,      MK_PE, CF_MSLINK,
     "FIXED",                &ProcNoRelocs,      MK_PE, CF_MSLINK,
     "FORCE",                &ProcRedefsOK,      MK_PE, CF_MSLINK,
-    "HEAP",                 &ProcHeapSize,      MK_PE, CF_MSLINK,
+    "Heap",                 &ProcHeapSize,      MK_PE, CF_MSLINK,
     "IMPLIB",               &ProcImport,        MK_PE, CF_MSLINK|CF_AFTER_INC,
-    "INCLUDE",              &ProcSymTrace,      MK_PE, CF_MSLINK,
-    "LARGEADDRESSAWARE",    &ProcLargeAddr,     MK_PE, CF_MSLINK,
-    "LIBPATH",              &ProcLibPath,       MK_PE, CF_MSLINK,
-    "MACHINE",              &ProcMachine,       MK_PE, CF_MSLINK,
+    "Include",              &ProcSymTrace,      MK_EX, CF_MSLINK,
+    "LArgeaddressaware",    &ProcLargeAddr,     MK_PE, CF_MSLINK,
+    "Libpath",              &ProcLibPath,       MK_PE, CF_MSLINK,
+    "MAChine",              &ProcMachine,       MK_EX, CF_MSLINK,
     "MANIFEST",             &ProcManifest,      MK_PE, CF_MSLINK,
     "MANIFESTFILE",         &ProcManifestFile,  MK_PE, CF_MSLINK,
     "MANIFESTDEPENDENCY",   &ProcManDependency, MK_PE, CF_MSLINK,
-    "MAP",                  &ProcMap,           MK_PE, CF_MSLINK,
+    "Map",                  &ProcMap,           MK_EX, CF_MSLINK,
     "MERGE",                &ProcMerge,         MK_PE, CF_MSLINK,
-    "NODEFAULTLIB",         &ProcNoDefLibs,     MK_PE, CF_MSLINK|CF_NO_DEF_LIBS,
-    "NOLOGO",               &ProcQuiet,         MK_PE, CF_MSLINK,
+    "NODefaultlib",         &ProcNoDefLibs,     MK_EX, CF_MSLINK|CF_NO_DEF_LIBS,
+    "NOLogo",               &ProcQuiet,         MK_EX, CF_MSLINK,
+    "NORelocs",             &ProcELFNoRelocs,   MK_ELF, CF_MSLINK,
     "NXCOMPAT",             &ProcNXCompat,      MK_PE, CF_MSLINK,
-    "OUT",                  &ProcName,          MK_PE, CF_MSLINK,
+    "Out",                  &ProcName,          MK_EX, CF_MSLINK,
     "SECTION",              &ProcSegment,       MK_PE, CF_MSLINK,
-    "STACK",                &ProcStack,         MK_PE, CF_MSLINK,
+    "STack",                &ProcStack,         MK_EX, CF_MSLINK,
     "STUB",                 &ProcStub,          MK_PE, CF_MSLINK,
-    "SUBSYSTEM",            &ProcSubsystem,     MK_PE, CF_MSLINK,
-    "VERBOSE",              &ProcVerbose,       MK_PE, CF_MSLINK,
-    "VERSION",              &ProcVersion,       MK_PE, CF_MSLINK,
+    "SUBsystem",            &ProcSubsystem,     MK_EX, CF_MSLINK,
+    "Verbose",              &ProcVerbose,       MK_EX, CF_MSLINK,
+    "VERSion",              &ProcVersion,       MK_PE, CF_MSLINK,
 
     "File",         &ProcFiles,         MK_ALL, CF_HAVE_FILES,
     "MODFile",      &ProcModFiles,      MK_ALL, 0,

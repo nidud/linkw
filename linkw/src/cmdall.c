@@ -210,20 +210,6 @@ bool ProcDef( void )
     return( TRUE );
 }
 
-void ProcInitPE( void )
-{
-    if ( !( LinkState & FMT_SPECIFIED ) ) {
-
-        LinkState |= FMT_SPECIFIED;
-
-        FmtData.u.pe.heapcommit = 4*1024; /* arbitrary non-zero default. */
-        FmtData.u.pe.os2.heapsize = 0x100000; /* JWLink: default heapsize and stacksize for PE */
-        StackSize = 0x100000;
-        FmtData.u.pe.stackcommit = PE_DEF_STACK_COMMIT;
-        FmtData.u.pe.os2.segment_shift = 9; /* 512 byte arbitrary rounding */
-    }
-}
-
 /* /LARGEADDRESSAWARE[:NO] */
 
 bool ProcLargeAddr( void )
@@ -235,7 +221,7 @@ bool ProcLargeAddr( void )
     return( TRUE );
 }
 
-/* /MACHINE:{X64|X86} */
+/* /MACHINE:{X64|X86|dos} */
 
 static int GetLibPath( char *buffer )
 {
@@ -276,6 +262,12 @@ static void AddMachineLib( char *directory )
     }
 }
 
+bool ProcMachineDOS( void )
+{
+    AddMachineLib("dos");
+    return( TRUE );
+}
+
 bool ProcMachineX86( void )
 {
     AddMachineLib("x86");
@@ -290,7 +282,6 @@ bool ProcMachineX64( void )
 
 bool ProcMachine( void )
 {
-    ProcInitPE();
     return( ProcOne( Machines, SEP_COLON, TRUE ) );
 }
 
@@ -407,27 +398,46 @@ bool ProcMerge( void )
     return( TRUE );
 }
 
-/* /SUBSYSTEM:{CONSOLE|WINDOWS} */
+/* /SUBSYSTEM:{CONSOLE|WINDOWS|LINUX|DOS} */
+
+void ProcInitPE( void )
+{
+    FmtData.u.pe.heapcommit = 4*1024; /* arbitrary non-zero default. */
+    FmtData.u.pe.os2.heapsize = 0x100000; /* JWLink: default heapsize and stacksize for PE */
+    StackSize = 0x100000;
+    FmtData.u.pe.stackcommit = PE_DEF_STACK_COMMIT;
+    FmtData.u.pe.os2.segment_shift = 9; /* 512 byte arbitrary rounding */
+    FmtData.u.pe.submajor = 4;
+    FmtData.u.pe.subminor = 0;
+    FmtData.u.pe.sub_specd = TRUE;
+}
 
 bool ProcSubsysConsole( void )
 {
-    /* symt _[w]mainCRTStartup */
+    ProcInitPE();
     FmtData.u.pe.subsystem = PE_SS_WINDOWS_CHAR;
     return( TRUE );
 }
 
 bool ProcSubsysWindows( void )
 {
+    ProcInitPE();
     FmtData.u.pe.subsystem = PE_SS_WINDOWS_GUI;
+    return( TRUE );
+}
+
+bool ProcSubsysLinux( void )
+{
+    FmtData.u.elf.abitype = 3; // ELFOSABI_LINUX;
     return( TRUE );
 }
 
 bool ProcSubsystem( void )
 {
-    ProcInitPE();
-    FmtData.u.pe.submajor = 4;
-    FmtData.u.pe.subminor = 0;
-    FmtData.u.pe.sub_specd = TRUE;
+    if( LinkState & FMT_SPECIFIED ) {
+        LnkMsg( LOC+LINE+FTL + MSG_MULTIPLE_MODES_FOUND, NULL );
+    }
+    LinkState |= FMT_SPECIFIED;
     return( ProcOne( Subsystems, SEP_COLON, TRUE ) );
 }
 
@@ -725,6 +735,8 @@ static void *AddObjFile( char *name, char *member, file_list **filelist )
         new_entry->file->flags |= INSTAT_LIBRARY;
     } else {
         new_entry->file = AllocFileEntry( name, Path );
+        if ( CmdFlags & CF_ASMCDIR_ADDED ) /* search LIB path for objects */
+            new_entry->file->flags |= INSTAT_USE_LIBPATH;
     }
     *filelist = new_entry;
     return( new_entry );
@@ -911,6 +923,13 @@ bool ProcFiles( void )
     return( ProcArgList( &AddFile, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
 }
 
+bool ProcVAlist( void )
+/* process VALIST command */
+{
+    GetToken( SEP_NO, TOK_INCLUDE_DOT | TOK_IS_FILENAME  );
+    return( ProcArgSPList( &AddFileEx, TOK_INCLUDE_DOT | TOK_IS_FILENAME ) );
+}
+
 bool ProcModFiles( void )
 /***************************/
 {
@@ -999,7 +1018,6 @@ bool ProcStack( void )
     ord_state       ord;
     unsigned_32     value;
 
-    ProcInitPE();
     LinkFlags |= STK_SIZE_FLAG;
     ret = GetLong( &StackSize );
     if ( ret && ( CmdFlags & CF_MSLINK ) ) {

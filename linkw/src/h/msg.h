@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  WLINK message output definitions.
+* Description:	WLINK message output definitions.
 *
 ****************************************************************************/
 
@@ -40,7 +40,7 @@
 	WRN	    = 0x00020000 + OUT_TERM + OUT_MAP,
 	MILD_ERR    = 0x00030000 + OUT_TERM + OUT_MAP,
 	ERR	    = 0x00040000 + OUT_TERM + OUT_MAP,
-	FTL	    = 0x00050000 + OUT_TERM + OUT_MAP,  /* fatal */
+	FTL	    = 0x00050000 + OUT_TERM + OUT_MAP,	/* fatal */
 	BANNER	    = 0x00060000,
 	LINE	    = 0x00080000,
 	LOC	    = 0x00400000,
@@ -67,9 +67,10 @@ enum msg_num {
     #define IDV
 #endif
 
-pick( PRODUCT,			banner1( IDV "LINKW", _WLINK_VERSION_ ) ),
+pick( PRODUCT,			banner1( IDV "Asmc Linker", _WLINK_VERSION_ ) ),
+pick( COPYRIGHT1,		banner4() ),
 pick( COPYRIGHT,		banner2( "1985" ) ),
-pick( TRADEMARK,		banner3 ),
+//pick( TRADEMARK,		banner3 ),
 //pick( TRADEMARK2,		  banner3a ),
 };
 

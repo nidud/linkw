@@ -1,8 +1,8 @@
-Linker Reference
+Asmc Linker Reference
 
 ## /SUBSYSTEM
 
-**/SUBSYSTEM**:{ CONSOLE | WINDOWS }
+**/SUBSYSTEM**:{ CONSOLE | WINDOWS | LINUX | DOS }
 
 The /SUBSYSTEM option specifies the environment for the executable.
 
@@ -10,4 +10,4 @@ The choice of subsystem affects the entry point symbol (or entry point function)
 
 #### See Also
 
-[Linker Reference](readme.md) | [/ENTRY](entry.md)
+[Asmc Linker Reference](readme.md) | [/ENTRY](entry.md)

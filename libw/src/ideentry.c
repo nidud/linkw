@@ -1,6 +1,6 @@
 /****************************************************************************
 *
-*                            Open Watcom Project
+*			     Open Watcom Project
 *
 *    Portions Copyright (c) 1983-2002 Sybase, Inc. All Rights Reserved.
 *
@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  WLIB DLL version mainline.
+* Description:	WLIB DLL version mainline.
 *
 ****************************************************************************/
 
@@ -37,7 +37,7 @@
 #include <banner.h>
 
 #if defined(__DEBUG__) && defined(_BANEXTRA)
-#undef  _BANEXTRA
+#undef	_BANEXTRA
 #define _BANEXTRA _BANEXSHORT
 #endif
 
@@ -60,7 +60,7 @@ int _stdcall MessageBoxA( void *hwnd, char *text, char *caption, uint type )
 
 
 
-static IDECBHdl   ideHdl;
+static IDECBHdl	  ideHdl;
 static IDECallBacks  *ideCb;
 static IDEInitInfo *ideInfo;
 
@@ -86,7 +86,7 @@ IDEBool IDEDLL_EXPORT IDEPassInitInfo( IDEDllHdl hdl, IDEInitInfo *info )
 
 IDEBool IDEDLL_EXPORT IDERunYourSelf( IDEDllHdl hdl, const char *opts, IDEBool *fatalerr )
 {
-    char        *argv[ 3 ];
+    char	*argv[ 3 ];
 
 	DEBUG(("ideentry:IDERunYourSelf\n"))
     *fatalerr = FALSE;
@@ -97,10 +97,10 @@ IDEBool IDEDLL_EXPORT IDERunYourSelf( IDEDllHdl hdl, const char *opts, IDEBool *
 }
 
 IDEBool IDEDLL_EXPORT IDERunYourSelfArgv(// COMPILE A PROGRAM (ARGV ARGS)
-    IDEDllHdl hdl,              // - handle for this instantiation
-    int argc,                   // - # of arguments
-    char **argv,                // - argument vector
-    IDEBool* fatal_error )      // - addr[ fatality indication ]
+    IDEDllHdl hdl,		// - handle for this instantiation
+    int argc,			// - # of arguments
+    char **argv,		// - argument vector
+    IDEBool* fatal_error )	// - addr[ fatality indication ]
 {
     *fatal_error = FALSE;
     return( WlibMainLine( argv ) );
@@ -109,9 +109,9 @@ IDEBool IDEDLL_EXPORT IDERunYourSelfArgv(// COMPILE A PROGRAM (ARGV ARGS)
 void IDEDLL_EXPORT IDEStopRunning( void )
 {
     if( !ideInfo || ideInfo->ver <= 2 || ideInfo->console_output ) {
-        exit( 1 );
+	exit( 1 );
     } else {
-        longjmp( Env, 1 );
+	longjmp( Env, 1 );
     }
 }
 
@@ -131,41 +131,41 @@ char *WlibGetEnv( char *name)
 {
     char *env;
     if( ideInfo->ignore_env == FALSE && ideCb) {
-        if( ideCb->GetInfo( ideHdl, IDE_GET_ENV_VAR, (IDEGetInfoWParam) name, (IDEGetInfoLParam) &env ) == FALSE ) {
-            return( env );
-        }
+	if( ideCb->GetInfo( ideHdl, IDE_GET_ENV_VAR, (IDEGetInfoWParam) name, (IDEGetInfoLParam) &env ) == FALSE ) {
+	    return( env );
+	}
     }
     return( NULL );
 
 }
 void FatalResError()
 {
-    IDEMsgInfo          msg_info;
+    IDEMsgInfo		msg_info;
 
     if( ideCb ) {
-        msg_info.severity = IDEMSGSEV_ERROR;
-        msg_info.flags = 0;
-        msg_info.helpfile = NULL;
-        msg_info.helpid = 0;
-        msg_info.msg = NO_RES_MESSAGE;
-        ideCb->PrintWithInfo( ideHdl, &msg_info );
+	msg_info.severity = IDEMSGSEV_ERROR;
+	msg_info.flags = 0;
+	msg_info.helpfile = NULL;
+	msg_info.helpid = 0;
+	msg_info.msg = NO_RES_MESSAGE;
+	ideCb->PrintWithInfo( ideHdl, &msg_info );
     }
     longjmp( Env, 1 );
 }
 
 void FatalError( int str, ... )
 {
-    va_list             arglist;
-    char                buff[ MAX_ERROR_SIZE ];
-    char                msg[ 512 ];
-    IDEMsgInfo          msg_info;
+    va_list		arglist;
+    char		buff[ MAX_ERROR_SIZE ];
+    char		msg[ 512 ];
+    IDEMsgInfo		msg_info;
 
     va_start( arglist, str );
     MsgGet( str, buff );
     _vbprintf( msg, 512, buff, arglist );
     if( ideCb ) {
-        IdeMsgInit( &msg_info, IDEMSGSEV_ERROR, msg );
-        ideCb->PrintWithInfo( ideHdl, &msg_info );
+	IdeMsgInit( &msg_info, IDEMSGSEV_ERROR, msg );
+	ideCb->PrintWithInfo( ideHdl, &msg_info );
     }
     va_end( arglist );
     longjmp( Env, 1 );
@@ -173,87 +173,87 @@ void FatalError( int str, ... )
 
 void Warning( int str, ... )
 {
-    va_list             arglist;
-    char                buff[ MAX_ERROR_SIZE ];
-    char                msg[ 512 ];
-    IDEMsgInfo          msg_info;
+    va_list		arglist;
+    char		buff[ MAX_ERROR_SIZE ];
+    char		msg[ 512 ];
+    IDEMsgInfo		msg_info;
 
     if( Options.quiet )
-        return;
+	return;
     MsgGet( str, buff );
     va_start( arglist, str );
     _vbprintf( msg, 512, buff, arglist );
     if( ideCb ) {
-        IdeMsgInit( &msg_info, IDEMSGSEV_WARNING, msg );
-        ideCb->PrintWithInfo( ideHdl, &msg_info );
+	IdeMsgInit( &msg_info, IDEMSGSEV_WARNING, msg );
+	ideCb->PrintWithInfo( ideHdl, &msg_info );
     }
     va_end( arglist );
 }
 
 void Message( char *buff, ... )
 {
-    va_list             arglist;
-    char                msg[ 512 ];
-    IDEMsgInfo          msg_info;
+    va_list		arglist;
+    char		msg[ 512 ];
+    IDEMsgInfo		msg_info;
 
     if( Options.quiet )
-        return;
+	return;
     va_start( arglist, buff );
     _vbprintf( msg, 512, buff, arglist );
     if( ideCb ) {
-        IdeMsgInit( &msg_info, IDEMSGSEV_NOTE_MSG, msg );
-        ideCb->PrintWithInfo( ideHdl, &msg_info );
+	IdeMsgInit( &msg_info, IDEMSGSEV_NOTE_MSG, msg );
+	ideCb->PrintWithInfo( ideHdl, &msg_info );
     }
     va_end( arglist );
 }
 
 void Usage( void )
 {
-    char                buff[ MAX_ERROR_SIZE ];
-    int                 str;
-    int                 str_first;
-    int                 str_last;
-    IDEMsgInfo          msg_info;
-    int                 count;
+    char		buff[ MAX_ERROR_SIZE ];
+    int			str;
+    int			str_first;
+    int			str_last;
+    IDEMsgInfo		msg_info;
+    int			count;
     if( ideCb ) {
-        msg_info.severity = IDEMSGSEV_BANNER;
-        count = 3;
-        msg_info.flags = 0;
-        msg_info.helpfile = NULL;
-        msg_info.helpid = 0;
-        msg_info.msg = buff;
-        if( Options.ar ) {
-            str_first = USAGE_AR_FIRST;
-            str_last = USAGE_AR_LAST;
-        } else {
-            str_first = USAGE_WLIB_FIRST;
-            str_last = USAGE_WLIB_LAST;
-        }
-        for( str = str_first; str <= str_last; ++str ) {
-            MsgGet( str, buff );
+	msg_info.severity = IDEMSGSEV_BANNER;
+	count = 3;
+	msg_info.flags = 0;
+	msg_info.helpfile = NULL;
+	msg_info.helpid = 0;
+	msg_info.msg = buff;
+	if( Options.ar ) {
+	    str_first = USAGE_AR_FIRST;
+	    str_last = USAGE_AR_LAST;
+	} else {
+	    str_first = USAGE_WLIB_FIRST;
+	    str_last = USAGE_WLIB_LAST;
+	}
+	for( str = str_first; str <= str_last; ++str ) {
+	    MsgGet( str, buff );
 #ifndef __UNIX__
-            if( ideInfo && ideInfo->ver > 2 && ideInfo->console_output &&
-                ( count > 20 && buff[ 0 ] == '\0' || count == 24 ) ) {
-                msg_info.msg = "    (Press Return to continue)" ;
-                ideCb->PrintWithInfo( ideHdl, &msg_info );
-                getch();
-                count = 0;
-                msg_info.msg = buff;
-            }
+	    if( ideInfo && ideInfo->ver > 2 && ideInfo->console_output &&
+		( count > 20 && buff[ 0 ] == '\0' || count == 24 ) ) {
+		msg_info.msg = "    (Press Return to continue)" ;
+		ideCb->PrintWithInfo( ideHdl, &msg_info );
+		getch();
+		count = 0;
+		msg_info.msg = buff;
+	    }
 #endif
-            ++count;
-            if( buff[ 0 ] == '\0' ) {
-                continue;
-            }
-            ideCb->PrintWithInfo( ideHdl, &msg_info );
-        }
+	    ++count;
+	    if( buff[ 0 ] == '\0' ) {
+		continue;
+	    }
+	    ideCb->PrintWithInfo( ideHdl, &msg_info );
+	}
     }
     longjmp( Env, 1 );
 }
 
 void Banner()
 {
-    IDEMsgInfo          msg_info;
+    IDEMsgInfo		msg_info;
     static char *bannerText[] = {
 #ifdef __DEBUG__
 banner1w( "Library Manager", _WLIB_VERSION_ ) " [Internal Development]",
@@ -261,7 +261,7 @@ banner1w( "Library Manager", _WLIB_VERSION_ ) " [Internal Development]",
 banner1w( "Library Manager", _WLIB_VERSION_ ),
 #endif
 banner2a(),
-banner3,
+//banner3,
 //banner3a,
     NULL
     };
@@ -269,18 +269,18 @@ banner3,
     char **text;
 
     if( Options.quiet || alreadyDone || Options.terse_listing )
-        return;
+	return;
 
     alreadyDone = 1;
     if( ideCb ) {
-        msg_info.severity = IDEMSGSEV_BANNER;
-        msg_info.flags = 0;
-        msg_info.helpfile = NULL;
-        msg_info.helpid = 0;
-        text = bannerText;
-        while( *text ) {
-            msg_info.msg = *text++;
-            ideCb->PrintWithInfo( ideHdl, &msg_info );
-        }
+	msg_info.severity = IDEMSGSEV_BANNER;
+	msg_info.flags = 0;
+	msg_info.helpfile = NULL;
+	msg_info.helpid = 0;
+	text = bannerText;
+	while( *text ) {
+	    msg_info.msg = *text++;
+	    ideCb->PrintWithInfo( ideHdl, &msg_info );
+	}
     }
 }
