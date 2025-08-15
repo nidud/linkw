@@ -68,7 +68,7 @@ enum msg_num {
 #endif
 
 pick( PRODUCT,			banner1( IDV "Asmc Linker", _WLINK_VERSION_ ) ),
-pick( COPYRIGHT1,		banner4() ),
+//pick( COPYRIGHT1,		banner4() ),
 pick( COPYRIGHT,		banner2( "1985" ) ),
 //pick( TRADEMARK,		banner3 ),
 //pick( TRADEMARK2,		  banner3a ),
