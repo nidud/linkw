@@ -130,6 +130,7 @@ parse_entry     Directives[] = {
     "NORelocs",             &ProcELFNoRelocs,   MK_ELF, CF_MSLINK,
     "NXCOMPAT",             &ProcNXCompat,      MK_PE, CF_MSLINK,
     "Out",                  &ProcName,          MK_EX, CF_MSLINK,
+    "RESource",             &ProcResource,      MK_PE, CF_MSLINK,
     "SECTION",              &ProcSegment,       MK_PE, CF_MSLINK,
     "STack",                &ProcStack,         MK_EX, CF_MSLINK,
     "STUB",                 &ProcStub,          MK_PE, CF_MSLINK,
@@ -160,7 +161,7 @@ parse_entry     Directives[] = {
     "ORDer",        &ProcOrder,         MK_ALL, 0,
     "OUTput",       &ProcOutput,        MK_ALL, 0,
 #ifdef _OS2
-    "RESource",     &ProcResource,      MK_PE, 0,
+//    "RESource",     &ProcResource,      MK_PE, 0,
     "COMmit",       &ProcCommit,        MK_PE, 0,
     //"ANONymousexport",&ProcAnonExport,  MK_OS2, CF_AFTER_INC,
     "ANONymousexport",&ProcAnonExport,  MK_OS2 | MK_PE, CF_AFTER_INC,
