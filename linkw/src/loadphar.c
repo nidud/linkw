@@ -257,7 +257,7 @@ static unsigned_32 WriteSIT( void )
     sit.flags = 0;
     sit.base = 0;
     sit.extra = 0;
-    sit.base = FmtData.base;
+    sit.base = FmtData.base.x86;
     for( group = Groups; group != NULL; group = group->next_group ) {
         sit.selector = group->grp_addr.seg;
         sit.extra = group->totalsize - group->size;
@@ -361,7 +361,7 @@ static void WritePharExtended( unsigned_32 start )
         _HostU16toTarg( 0, header.LDT );
         _HostU16toTarg( 0, header.TSS );
     }
-    _HostU32toTarg( FmtData.base, header.offset );
+    _HostU32toTarg( FmtData.base.x86, header.offset );
     _HostU32toTarg( StackAddr.off, header.ESP );
     _HostU32toTarg( StartInfo.addr.off, header.EIP );
     _HostU16toTarg( 0, header.flags );    // packing not yet implemented.

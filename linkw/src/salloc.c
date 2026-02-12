@@ -130,7 +130,7 @@ void StartMemMap( void )
         CurrLoc.seg = (FmtData.type & MK_PROT_MODE) ? 1 : 0;
         CurrLoc.off = 0;
         if( FmtData.type & MK_FLAT ) {
-            CurrLoc.off = FmtData.base;
+            CurrLoc.off = FmtData.base.x86;
         }
     }
 }
@@ -153,7 +153,7 @@ void ChkLocated( targ_addr * segadr, bool fixed)
 /*******************************************************/
 // If segment has been given a fixed address, use it
 //  unless location counter is already past it
-// This should only be called from real mode 
+// This should only be called from real mode
 {
     if ( fixed ) {
         if( (CurrLoc.seg << FmtData.SegShift) + CurrLoc.off >

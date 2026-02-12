@@ -573,10 +573,10 @@ void ChkBase( offset align )
     if( FmtData.objalign != NO_BASE_SPEC && FmtData.objalign > align ) {
         align = FmtData.objalign;
     }
-    if( FmtData.base != NO_BASE_SPEC &&
-                (FmtData.base & (align-1)) != 0 ) {
+    if( FmtData.base.x86 != NO_BASE_SPEC &&
+                (FmtData.base.x86 & (align-1)) != 0 ) {
         LnkMsg( LOC+LINE+WRN+MSG_OFFSET_MUST_BE_ALIGNED, "l", align );
-        FmtData.base = (FmtData.base + align-1) & ~(align-1);
+        FmtData.base.x86 = (FmtData.base.x86 + align-1) & ~(align-1);
     }
 }
 

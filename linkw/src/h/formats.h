@@ -246,7 +246,10 @@ struct fmt_data {
     }               u;
     seg_leader      *dgroupsplitseg;
     offset          bsspad;
-    offset          base;
+    union fmt_image_base {
+        offset      x86;
+        offset64    x64;
+    }               base;
     offset          objalign;
     char            *implibname; /* IMPLIB filename */
     char            *osname;

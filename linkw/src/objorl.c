@@ -430,6 +430,14 @@ static orl_return IncludeCmd( char *name, void *dummy )
     return( ORL_OKAY );
 }
 
+static orl_return MergeCmd( char *name, void *dummy )
+{
+    dummy = dummy;
+
+    /* TODO: */
+
+    return( ORL_OKAY );
+}
 
 struct cmditem {
     const char *cmd;
@@ -446,6 +454,7 @@ static const struct cmditem cmdtab[] = {
     { "import"	  , ImportCmd },
     { "include"	  , IncludeCmd },
     { "manifestdependency", ManifestCmd },
+    { "merge"	  , MergeCmd },
 };
 #define NUMLNKCMDS ( sizeof( cmdtab ) / sizeof( cmdtab[0] ) )
 

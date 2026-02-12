@@ -303,7 +303,7 @@ static void WriteOutTokElem( void *_elem, void *buf )
         sdata = elem->e.sdata;
         leader = sdata->u.leader;
         addr = elem->e.u.off + sdata->a.delta + leader->group->linear
-                        + leader->seg_addr.off +  FmtData.base;
+                        + leader->seg_addr.off +  FmtData.base.x86;
     } else {
         addr = SymbolAbsAddr(elem->e.u.sym);
     }
@@ -326,7 +326,7 @@ void WriteToc( virt_mem buf )
         DbgAssert(TocShift >= GOT_RESERVED_NEG_SIZE);
 
         res[zero-1] = blrl_opcode;
-        res[zero] = IDataGroup->linear + FmtData.base;
+        res[zero] = IDataGroup->linear + FmtData.base.x86;
         PutInfo(buf+TocShift-GOT_RESERVED_NEG_SIZE, res, GOT_RESERVED_SIZE);
         #endif
     }

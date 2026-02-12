@@ -383,7 +383,7 @@ void FiniQNXLoadFile( void )
 
     CurrSect = Root;
     if( FmtData.type & MK_QNX_FLAT ) {
-        if( FmtData.base < StackSize ) {
+        if( FmtData.base.x86 < StackSize ) {
             LnkMsg( WRN+MSG_QNX_BASE_LT_STACK, NULL );
         }
     }
@@ -438,7 +438,7 @@ void FiniQNXLoadFile( void )
     header.code_offset = StartInfo.addr.off;
     header.stack_nbytes = StackSize;
     header.heap_nbytes = FmtData.u.qnx.heapsize;
-    header.image_base = FmtData.base;
+    header.image_base = FmtData.base.x86;
     WriteLoad( &header, sizeof( lmf_header ) );
     WriteLoad( segments, nbytes );
 }

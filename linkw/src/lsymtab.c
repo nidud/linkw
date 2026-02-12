@@ -1485,7 +1485,7 @@ offset SymbolAbsAddr( symbol *sym )
     gr = SymbolGroup( sym );
     addr = sym->addr.off;
     if( gr != NULL ) {
-        addr += gr->linear + FmtData.base;
+        addr += gr->linear + FmtData.base.x86;
     } else {
         // it is an imported symbol; addr is already absolute
     }

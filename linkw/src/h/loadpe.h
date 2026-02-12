@@ -31,6 +31,9 @@
 
 #include "exepe.h"
 
+#define PE64_DEF_BASE_EXE 0x140000000
+#define PE64_DEF_BASE_DLL 0x180000000
+
 #define PE_DEFAULT_BASE (0x400000UL)
 #define PE_DEFAULT_BASE_DLL (0x10000000UL) /* jwlink */
 #define PE_DEF_STACK_COMMIT (0xFFFFFFFFUL)

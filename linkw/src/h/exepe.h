@@ -24,7 +24,7 @@
 *
 *  ========================================================================
 *
-* Description:  Portable Executable (PE) format structures and constants.
+* Description:	Portable Executable (PE) format structures and constants.
 *
 ****************************************************************************/
 
@@ -107,7 +107,7 @@ typedef struct {
     unsigned_32		heap_commit_size;
     unsigned_32		tls_idx_addr;
     unsigned_32		num_tables;
-    pe_hdr_table_entry  table[PE_TBL_NUMBER];
+    pe_hdr_table_entry	table[PE_TBL_NUMBER];
 } pe_header;
 
 /* PE64 header structure */
@@ -140,7 +140,7 @@ typedef struct {
     unsigned_16		subsys_minor;
     unsigned_32		rsvd1;
     unsigned_32		image_size;
-    unsigned_32		header_size;  //size of dos hdr, nt hdr, obj table & pad
+    unsigned_32		header_size;	//size of dos hdr, nt hdr, obj table & pad
     unsigned_32		file_checksum;
     unsigned_16		subsystem;
     unsigned_16		dll_flags;
@@ -150,7 +150,7 @@ typedef struct {
     pe_va64		heap_commit_size;
     unsigned_32		tls_idx_addr;
     unsigned_32		num_tables;
-    pe_hdr_table_entry  table[PE_TBL_NUMBER];
+    pe_hdr_table_entry	table[PE_TBL_NUMBER];
 } pe_header64;
 
 #define OLD_PE_TBL_SIZE (sizeof(pe_header) - 2 * (16 - 9) * sizeof(pe_va))
@@ -193,8 +193,8 @@ enum {
 
 
 /* Linker major/minor version numbers */
-#define PE_LNK_MAJOR	2
-#define PE_LNK_MINOR	0x12
+#define PE_LNK_MAJOR	3
+#define PE_LNK_MINOR	0
 
 #define PE_IMAGE_BASE	(0x400000UL)	/* default image base */
 #define PE_OBJECT_ALIGN (64UL*1024)	/* default object alignment */
@@ -338,9 +338,9 @@ typedef struct {
 #define PE_FIX_ABS	(0x0<<PEUP)	/* absolute, skipped */
 #define PE_FIX_HIGH	(0x1<<PEUP)	/* add high 16 of delta */
 #define PE_FIX_LOW	(0x2<<PEUP)	/* add low 16 of delta */
-#define PE_FIX_HIGHLOW  (0x3<<PEUP)	/* add all 32 bits of delta */
-#define PE_FIX_HIGHADJ  (0x4<<PEUP)	/* see the doc */
-#define PE_FIX_MIPSJMP  (0x5<<PEUP)	/* see the doc */
+#define PE_FIX_HIGHLOW	(0x3<<PEUP)	/* add all 32 bits of delta */
+#define PE_FIX_HIGHADJ	(0x4<<PEUP)	/* see the doc */
+#define PE_FIX_MIPSJMP	(0x5<<PEUP)	/* see the doc */
 
 /* PE fixup types (stashed in 4 high bits of a pe_fixup_entry) */
 #define OLD_PE_FIX_ABS		(0x0<<OLD_PEUP) /* absolute, skipped */

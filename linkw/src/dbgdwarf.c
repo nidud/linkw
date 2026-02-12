@@ -478,7 +478,7 @@ static offset GetLinearGroupOffset( group_entry *group )
     if( group != NULL ) {
         off = group->linear - group->grp_addr.off;
         if( FmtData.type & MK_ELF ) {
-            off += FmtData.base;
+            off += FmtData.base.x86;
         } else {
             off -= Groups->linear;
         }

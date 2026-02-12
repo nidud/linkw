@@ -157,7 +157,7 @@ static void ResetCmdFile( void )
     CmdFlags = CF_UNNAMED;
     Path = NULL;
     memset( &FmtData, 0, sizeof(FmtData) );
-    FmtData.base = NO_BASE_SPEC;
+    FmtData.base.x86 = NO_BASE_SPEC;
     FmtData.objalign = NO_BASE_SPEC;
     FmtData.type = MK_ALL;
     FmtData.def_seg_flags = SEG_LEVEL_3;
@@ -1063,7 +1063,7 @@ bool ProcHeapSize( void ) /* /HEAP:reserve[,commit] */
 bool ProcOffset( void )
 /****************************/
 {
-    if( !GetLong( &FmtData.base ) ) return( FALSE );
+    if( !GetLong( &FmtData.base.x86 ) ) return( FALSE );
     if( !(FmtData.type & (MK_PHAR_LAP|MK_QNX_FLAT|MK_RAW)) ) {
 	ChkBase( 64 * 1024 );
     } else if( !(FmtData.type & (MK_OS2_FLAT|MK_PE)) ) {

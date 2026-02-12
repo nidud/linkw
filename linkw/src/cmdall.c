@@ -277,6 +277,7 @@ bool ProcMachineX86( void )
 bool ProcMachineX64( void )
 {
     AddMachineLib("x64");
+    FmtData.u.pe.win64 = 1;
     return( TRUE );
 }
 
@@ -408,6 +409,8 @@ void ProcInitPE( void )
     FmtData.u.pe.stackcommit = PE_DEF_STACK_COMMIT;
     FmtData.u.pe.os2.segment_shift = 9; /* 512 byte arbitrary rounding */
     FmtData.u.pe.submajor = 4;
+    if ( FmtData.u.pe.win64 )
+        FmtData.u.pe.submajor = 6;
     FmtData.u.pe.subminor = 0;
     FmtData.u.pe.sub_specd = TRUE;
 }

@@ -29,7 +29,11 @@
 *
 ****************************************************************************/
 
-
+#if defined(__WATCOMC__)
+typedef unsigned long long  offset64;
+#else
+typedef unsigned __int64    offset64;
+#endif
 typedef unsigned_32 offset;
 typedef unsigned_16 segment;
 

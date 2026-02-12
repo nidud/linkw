@@ -617,7 +617,7 @@ offset FindLinearAddr2( targ_addr *addr )
 
     group = FindGroup( addr->seg );
     if( group != NULL ) {
-        return( addr->off + group->linear + FmtData.base );
+        return( addr->off + group->linear + FmtData.base.x86 );
     }
     return( addr->off );
 }

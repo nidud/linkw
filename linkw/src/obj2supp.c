@@ -415,7 +415,7 @@ static void BuildReloc( save_fixup *save, frame_spec *targ, frame_spec *frame )
 	    */
 			DEBUG(( DBG_OLD, "BuildReloc: import, tgt_addr=%h", targ->u.sym->addr ))
 			if ( FmtData.u.pe.win64 && targ->u.sym->mod == NULL ) /* is it a IAT symbol? */
-		fix.tgt_addr.off = targ->u.sym->addr.off - FmtData.base;
+		fix.tgt_addr.off = targ->u.sym->addr.off - FmtData.base.x86;
 			else
 				fix.tgt_addr = targ->u.sym->addr;
 			fix.imported = FALSE;
@@ -1008,7 +1008,7 @@ static offset FindRealAddr( fix_data *fix )
 	off += ( group->linear - group->grp_addr.off );
 	if( FmtData.type & MK_LINEARIZE ) {
 	    if( !( fix->type & FIX_NO_BASE ) ) {
-		off += FmtData.base;
+		off += FmtData.base.x86;
 	    }
 	    // want dbi addresses relative to 0, but not for ELF
 	    // (perhaps absolute for others too, later)
@@ -1017,7 +1017,7 @@ static offset FindRealAddr( fix_data *fix )
 	    }
 	}
 	if( dbiflat && !(FmtData.type & MK_ELF) ) {
-	    off -= FmtData.base;
+	    off -= FmtData.base.x86;
 	}
     }
     return( off );
