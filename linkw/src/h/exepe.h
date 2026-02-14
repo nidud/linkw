@@ -195,17 +195,23 @@ enum {
 /* Linker major/minor version numbers */
 #define PE_LNK_MAJOR	3
 #define PE_LNK_MINOR	0
+#define PE64_LNK_MAJOR	10
+#define PE64_LNK_MINOR	0
 
 #define PE_IMAGE_BASE	(0x400000UL)	/* default image base */
 #define PE_OBJECT_ALIGN (64UL*1024)	/* default object alignment */
 #define PE_FILE_ALIGN	(0x200U)	/* default file alignment */
 
 /* OS major/minor version numbers */
-#define PE_OS_MAJOR	1
+#define PE_OS_MAJOR	4
 #define PE_OS_MINOR	0
+#define PE64_OS_MAJOR	6
+#define PE64_OS_MINOR	0
 /* Subsystem major/minor version numbers */
-#define PE_SS_MAJOR	0
+#define PE_SS_MAJOR	4
 #define PE_SS_MINOR	0
+#define PE64_SS_MAJOR	6
+#define PE64_SS_MINOR	0
 
 /* SUBSYSTEM field values */
 enum {
@@ -220,12 +226,19 @@ enum {
 
 /* DLL FLAGS field bit values */
 enum {
-    PE_DLL_PERPROC_INIT	    = 0x0001,  /* obsolete */
-    PE_DLL_PERPROC_TERM	    = 0x0002,  /* obsolete */
-    PE_DLL_PERTHRD_INIT	    = 0x0004,  /* obsolete */
-    PE_DLL_PERTHRD_TERM	    = 0x0008,  /* obsolete */
-    PE_DLL_NXCOMPAT	    = 0x0100,  /* jwlink */
-    PE_DLL_WDM_DRIVER	    = 0x2000   /* jwlink */
+    PE_DLL_PERPROC_INIT	    = 0x0001,	/* obsolete */
+    PE_DLL_PERPROC_TERM	    = 0x0002,	/* obsolete */
+    PE_DLL_PERTHRD_INIT	    = 0x0004,	/* obsolete */
+    PE_DLL_PERTHRD_TERM	    = 0x0008,	/* obsolete */
+    PE_DLL_HIGH_ENTROPY_VA  = 0x0020,	/* linkw */
+    PE_DLL_DYNAMIC_BASE	    = 0x0040,	/* linkw */
+    PE_DLL_FORCE_INTEGRITY  = 0x0080,	/* linkw */
+    PE_DLL_NXCOMPAT	    = 0x0100,	/* jwlink */
+    PE_DLL_NO_ISOLATION	    = 0x0200,	/* linkw */
+    PE_DLL_NO_SEH	    = 0x0400,	/* linkw */
+    PE_DLL_NO_BIND	    = 0x0800,	/* linkw */
+    PE_DLL_WDM_DRIVER	    = 0x2000,	/* jwlink */
+    PE_DLL_TERMINAL_SERVER_AWARE = 0x8000, /* linkw */
 };
 
 /* PE object table structure */

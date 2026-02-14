@@ -277,7 +277,10 @@ bool ProcMachineX86( void )
 bool ProcMachineX64( void )
 {
     AddMachineLib("x64");
-    FmtData.u.pe.win64 = 1;
+    FmtData.u.pe.win64 = 1; /* added 3.00 */
+#if 0
+    FmtData.u.pe.checksumfile = 1; /* added 3.01 */
+#endif
     return( TRUE );
 }
 
@@ -408,10 +411,12 @@ void ProcInitPE( void )
     StackSize = 0x100000;
     FmtData.u.pe.stackcommit = PE_DEF_STACK_COMMIT;
     FmtData.u.pe.os2.segment_shift = 9; /* 512 byte arbitrary rounding */
-    FmtData.u.pe.submajor = 4;
-    if ( FmtData.u.pe.win64 )
-        FmtData.u.pe.submajor = 6;
-    FmtData.u.pe.subminor = 0;
+    FmtData.u.pe.submajor = PE_SS_MAJOR;
+    FmtData.u.pe.subminor = PE_SS_MINOR;
+    if ( FmtData.u.pe.win64 ) {
+        FmtData.u.pe.submajor = PE64_SS_MAJOR;
+        FmtData.u.pe.subminor = PE64_SS_MINOR;
+    }
     FmtData.u.pe.sub_specd = TRUE;
 }
 

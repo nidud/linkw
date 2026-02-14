@@ -366,8 +366,8 @@ static void GenPETransferTable( void )
 	addr = FindLinearAddr( &loc_imp->locsym->addr ) + FmtData.base.x86;
 	PutInfo( XFerSegData->data + off, &addr, sizeof( addr ) );
     }
-    if( LinkState & MAKE_RELOCS ) {
-	for( loc_imp = PELocalImpList; loc_imp != NULL; loc_imp = loc_imp->next ) {
+    if ( LinkState & MAKE_RELOCS ) {
+	for ( loc_imp = PELocalImpList; loc_imp != NULL; loc_imp = loc_imp->next ) {
 	    XFerReloc( loc_imp->iatsym->addr.off, group, PE_FIX_HIGHLOW );
 	}
     }
@@ -388,8 +388,11 @@ static void WriteDataPages( pe_header *header, pe_object *object )
     header->code_base = 0xFFFFFFFFUL;
     header->data_base = 0xFFFFFFFFUL;
     for( group = Groups; group != NULL; group = group->next_group) {
-	if( group->totalsize == 0 ) continue;	// DANGER DANGER DANGER <--!!!
+	if( group->totalsize == 0 ) {
+	    continue;	// DANGER DANGER DANGER <--!!!
+	}
 	name = group->sym->name;
+
 	leader = Ring2First( group->leaders );
 	if( name == NULL || name[0] == 0 ) {
 	    name = leader->segname;
@@ -398,6 +401,7 @@ static void WriteDataPages( pe_header *header, pe_object *object )
 	strncpy( object->name, name, PE_OBJ_NAME_LEN );
 	size_ph = CalcGroupSize( group );
 	DEBUG(( DBG_OLD, "WriteDataPages(): grp=%s grp.segflgs=%h size_ph=%h", name, group->segflags, size_ph ));
+
 	if( group == DataGroup && FmtData.dgroupsplitseg != NULL ) {
 	    size_v = group->totalsize;
 	    if( StackSegPtr != NULL ) {
@@ -817,6 +821,7 @@ static unsigned_32 WriteRelocList( void **reloclist, unsigned_32 size,
     return( size );
 }
 
+
 static void WriteFixupInfo( pe_header *header, pe_object *object )
 /*****************************************************************/
 /* dump the fixup table */
@@ -827,14 +832,12 @@ static void WriteFixupInfo( pe_header *header, pe_object *object )
     group_entry		*group;
     void ***		reloclist;
     unsigned long	size;
-    unsigned long	count;
 
     strncpy( object->name, ".reloc", PE_OBJ_NAME_LEN );
     object->physical_offset = NullAlign( header->file_align );
     object->rva = header->image_size;
     object->flags = PE_OBJ_INIT_DATA | PE_OBJ_READABLE | PE_OBJ_DISCARDABLE;
     size = 0;
-    count = 0;
     for( group = Groups; group != NULL; group = group->next_group ) {
 	reloclist = group->g.grp_relocs;
 	if( reloclist != NULL ) {
@@ -1058,26 +1061,29 @@ static void WriteDebugTable( pe_header *header, pe_object *object, const char *s
     header->image_size += ROUND_UP( num_entries * sizeof( debug_directory ), header->object_align );
 }
 
-static void CheckNumRelocs( void )
+static int CheckNumRelocs( void )
 /********************************/
 // don't want to generate a .reloc section if we don't have any relocs
 {
     group_entry *group;
     symbol	*sym;
 
-    if( !(LinkState & MAKE_RELOCS) )
-	return;
-    for( group = Groups; group != NULL; group = group->next_group ) {
-	if( group->g.grp_relocs != NULL ) {
-	    return;
+    if ( LinkState & MAKE_RELOCS ) {
+	for( group = Groups; group != NULL; group = group->next_group ) {
+	    if( group->g.grp_relocs != NULL ) {
+		return( 1 );
+	   }
 	}
     }
+#if 0
     WALK_IMPORT_SYMBOLS( sym ) {
 	if( LinkState & HAVE_MACHTYPE_MASK ) {
-	    return;
+	    return( 1 );
 	}
     }
-	//LinkState &= ~MAKE_RELOCS; /* jwlink: don't set "RELOCS stripped" if no relocs */
+#endif
+    return( 0 );
+    //LinkState &= ~MAKE_RELOCS; /* jwlink: don't set "RELOCS stripped" if no relocs */
 }
 
 static seg_leader *SetLeaderTable( char *name, pe_hdr_table_entry *entry )
@@ -1089,10 +1095,10 @@ static seg_leader *SetLeaderTable( char *name, pe_hdr_table_entry *entry )
     if( leader != NULL ) {
 	entry->rva =  leader->group->linear + GetLeaderDelta( leader );
 	entry->size = leader->size;
-#if 1 /* JWLink: debug msg */
-	//printf("SetLeaderTable(%s): rva=%Xh, size=%Xh\n", name, entry->rva, entry->size );
+#if 0 /* JWLink: debug msg */
+	printf("SetLeaderTable(%s): rva=%Xh, size=%Xh\n", name, entry->rva, entry->size );
     } else {
-	//printf("SetLeaderTable(%s): not found!\n", name );
+	printf("SetLeaderTable(%s): not found!\n", name );
 #endif
     }
     return( leader );
@@ -1218,16 +1224,22 @@ void FiniPELoadFile( void )
     pe_header64 exe_head64;
     unsigned_32 stub_len;
     pe_object	*object;
+    unsigned	num_relocs = 1;
     unsigned	num_objects;
     pe_object	*tbl_obj;
     unsigned	head_size;
+
 
     DEBUG(( DBG_OLD, "FiniPELoadFile() enter" ));
 #if 1 /* JWLink: don't check # of relocs if dll */
     if (!FmtData.dll)
 #endif
-	CheckNumRelocs();
+    if ( FmtData.u.pe.win64 && CheckNumRelocs() == 0 ) {
+	num_relocs = 0;
+    }
     num_objects = FindNumObjects();
+    if ( num_relocs == 0 )
+	num_objects--;
 
     if ( FmtData.u.pe.os2.segment_shift == -1 )
 	FmtData.u.pe.os2.segment_shift = DEFAULT_SEG_SHIFT;
@@ -1309,13 +1321,8 @@ void FiniPELoadFile( void )
 	exe_head.os_major = FmtData.u.pe.osmajor;
 	exe_head.os_minor = FmtData.u.pe.osminor;
     } else {
-#if 1 /* JWLink */
-	exe_head.os_major = 4;
-	exe_head.os_minor = 0;
-#else
 	exe_head.os_major = PE_OS_MAJOR;
-	exe_head.os_minor = PE_OS_MINOR + 0xb;	    // KLUDGE!
-#endif
+	exe_head.os_minor = PE_OS_MINOR;
     }
     exe_head.user_major = FmtData.major;
     exe_head.user_minor = FmtData.minor;
@@ -1323,13 +1330,8 @@ void FiniPELoadFile( void )
 	exe_head.subsys_major = FmtData.u.pe.submajor;
 	exe_head.subsys_minor = FmtData.u.pe.subminor;
     } else {
-#if 1 /* JWLink */
-	exe_head.subsys_major = 4;
-	exe_head.subsys_minor = 0;
-#else
-	exe_head.subsys_major = 3;
-	exe_head.subsys_minor = 0xa;
-#endif
+	exe_head.subsys_major = PE_SS_MAJOR;
+	exe_head.subsys_minor = PE_SS_MINOR;
     }
     if( FmtData.u.pe.subsystem != PE_SS_UNKNOWN ) {
 	exe_head.subsystem = FmtData.u.pe.subsystem;
@@ -1374,24 +1376,25 @@ void FiniPELoadFile( void )
 	    - sizeof(exe_head64.flags);
 
 	exe_head64.flags = ( exe_head.flags & ~PE_FLG_32BIT_MACHINE );
-	exe_head64.dll_flags |= 0x8160; /* HIGH_ENTROPY_VA | DYNAMIC_BASE | NX_COMPAT | TERMINAL_SERVICE_AWARE */
+	exe_head64.dll_flags |=
+		( PE_DLL_DYNAMIC_BASE | PE_DLL_HIGH_ENTROPY_VA | PE_DLL_TERMINAL_SERVER_AWARE );
 
 	if( FmtData.u.pe.lnk_specd ) {
 	    exe_head64.lnk_major = FmtData.u.pe.linkmajor;
 	    exe_head64.lnk_minor = FmtData.u.pe.linkminor;
 	} else {
-	    exe_head64.lnk_major = PE_LNK_MAJOR;
-	    exe_head64.lnk_minor = PE_LNK_MINOR;
+	    exe_head64.lnk_major = PE64_LNK_MAJOR;
+	    exe_head64.lnk_minor = PE64_LNK_MINOR;
 	}
-	exe_head64.image_base = (offset64)FmtData.base.x86;
+	exe_head64.image_base = FmtData.base.x64;
 	exe_head64.object_align = FmtData.objalign;
 	exe_head64.file_align = 1UL << FmtData.u.os2.segment_shift;
 	if( FmtData.u.pe.osv_specd ) {
 	    exe_head64.os_major = FmtData.u.pe.osmajor;
 	    exe_head64.os_minor = FmtData.u.pe.osminor;
 	} else {
-	    exe_head64.os_major = 6;
-	    exe_head64.os_minor = 0;
+	    exe_head64.os_major = PE64_OS_MAJOR;
+	    exe_head64.os_minor = PE64_OS_MINOR;
 	}
 	exe_head64.user_major = FmtData.major;
 	exe_head64.user_minor = FmtData.minor;
@@ -1399,8 +1402,8 @@ void FiniPELoadFile( void )
 	    exe_head64.subsys_major = FmtData.u.pe.submajor;
 	    exe_head64.subsys_minor = FmtData.u.pe.subminor;
 	} else {
-	    exe_head64.subsys_major = 6;
-	    exe_head64.subsys_minor = 0; /* is this the expected default? */
+	    exe_head64.subsys_major = PE64_SS_MAJOR;
+	    exe_head64.subsys_minor = PE64_SS_MINOR;
 	}
 
 	if( FmtData.u.pe.subsystem != PE_SS_UNKNOWN ) {
@@ -1451,7 +1454,7 @@ void FiniPELoadFile( void )
 	++tbl_obj;
     }
 #endif
-    if( LinkState & MAKE_RELOCS ) {
+    if ( ( LinkState & MAKE_RELOCS ) && num_relocs ) {
 	WriteFixupInfo( &exe_head, tbl_obj );
 	++tbl_obj;
     }
@@ -1479,6 +1482,10 @@ void FiniPELoadFile( void )
     }
 
     if ( FmtData.u.pe.win64 ) {
+#if 1
+	if ( !FmtData.dll && !num_relocs ) /* added 3.01 */
+	    exe_head64.image_base = PE64_DEF_BASE_EXE;
+#endif
 	exe_head64.entry_rva = exe_head.entry_rva;
 	exe_head64.code_size = exe_head.code_size;
 	exe_head64.init_data_size = exe_head.init_data_size;
@@ -1548,10 +1555,12 @@ unsigned long GetPEHeaderSize( void )
 
     num_objects = FindNumObjects();
     size = ROUND_UP( GetStubSize(), STUB_ALIGN );
-/*  if ( FmtData.u.pe.win64 ) linkw
+#if 0
+    if ( FmtData.u.pe.win64 ) linkw
 	size += sizeof( pe_header64 ) + num_objects * sizeof( pe_object );
-    else */
-	size += sizeof( pe_header ) + num_objects * sizeof( pe_object );
+    else
+#endif
+    size += sizeof( pe_header ) + num_objects * sizeof( pe_object );
     return( ROUND_UP( size, FmtData.objalign ) );
 }
 

@@ -524,12 +524,14 @@ void CalcAddresses( void )
     DEBUG(( DBG_OLD, "CalcAddresses() enter" ));
     if( FmtData.base.x86 == NO_BASE_SPEC ) {
 	if( FmtData.type & MK_PE ) {
-	 /* if ( FmtData.u.pe.win64 ) {
+#if 0
+	    if ( FmtData.u.pe.win64 ) {
 		if ( FmtData.dll )
 		    FmtData.base.x64 = PE64_DEF_BASE_DLL;
 	       else
 		    FmtData.base.x64 = PE64_DEF_BASE_EXE;
-	    } else */
+	    } else
+#endif
 	    if ( FmtData.dll ) { /* jwlink */
 		FmtData.base.x86 = PE_DEFAULT_BASE_DLL;
 	    } else {
