@@ -546,6 +546,7 @@ void StoreFixup( offset off, fix_type type, frame_spec *frame,
     if( ObjFormat & FMT_UNSAFE_FIXUPP ) {
 	save.flags |= FIX_UNSAFE;
     }
+    DPRINT(("fixup type: %x, addend: %d\n", type, addend));
     if ( type & FIX_REL_ELF64 ) {
 	save.adjust = addend;
 	addend = 0;

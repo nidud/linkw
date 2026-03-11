@@ -277,7 +277,8 @@ bool ProcMachineX86( void )
 bool ProcMachineX64( void )
 {
     AddMachineLib("x64");
-    FmtData.u.pe.win64 = 1; /* added 3.00 */
+    if ( FmtData.u.pe.sub_specd ) /* added 3.02 */
+        FmtData.u.pe.win64 = 1; /* added 3.00 */
 #if 0
     FmtData.u.pe.checksumfile = 1; /* added 3.01 */
 #endif

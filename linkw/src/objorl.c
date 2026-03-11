@@ -1014,10 +1014,10 @@ static orl_return DoReloc( orl_reloc *reloc )
 	    frame.type = FIX_FRAME_TARG;
 	    ext = FindExtHandle( reloc->symbol );
 	    if( ext == NULL ) {
-		addend = 0;
+		//addend = 0;
 		symseg = FindSegNode( ORLSymbolGetSecHandle(reloc->symbol) );
 		if( symseg != NULL && !(seg->info & SEG_DEAD) ) {
-		    addend = ORLSymbolGetValue( reloc->symbol );
+		    addend += ORLSymbolGetValue( reloc->symbol );
 		    targ.u.sdata = symseg->entry;
 		    targ.type = FIX_FRAME_SEG;
 		    if( istoc ) {
